@@ -1,0 +1,61 @@
+name: Generate Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      period:
+        description: Review period, for example 2026-H1
+        required: true
+        type: string
+      from:
+        description: Optional start date override in YYYY-MM-DD format
+        required: false
+        type: string
+      to:
+        description: Optional end date override in YYYY-MM-DD format
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+      TZ: Asia/Tokyo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Generate review
+        run: |
+          CMD="python -m work_log generate-review --period '${{ github.event.inputs.period }}'"
+          if [ -n "${{ github.event.inputs.from }}" ]; then
+            CMD="$CMD --from '${{ github.event.inputs.from }}'"
+          fi
+          if [ -n "${{ github.event.inputs.to }}" ]; then
+            CMD="$CMD --to '${{ github.event.inputs.to }}'"
+          fi
+          eval "$CMD"
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reviews
+          git commit -m "chore: generate review ${{ github.event.inputs.period }}"
+          git push
