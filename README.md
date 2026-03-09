@@ -1,6 +1,6 @@
 # work-log
 
-`work-log` は、Notion の日報を Git 管理の Markdown に同期し、実績ログや自己評価ドラフトを生成するための個人用リポジトリです。
+`work-log` は、Notion の日報を Git 管理の Markdown に同期し、Gemini で実績ログや自己評価ドラフトを生成するための個人用リポジトリです。
 
 ## リポジトリ構成
 
@@ -45,7 +45,7 @@ Notion を入力元にしつつ、GitHub 側には長期保存したいログだ
 ## セットアップ
 
 1. `.env.example` を `.env` にコピーします。
-2. Notion と OpenAI の認証情報を設定します。
+2. Notion と Gemini の認証情報を設定します。
 3. `uv` で環境を同期します。
 4. 以降のコマンドは `uv run` で実行します。
 
@@ -69,9 +69,11 @@ uv run work-log generate-review --period 2026-H1 --from 2026-01-01 --to 2026-06-
 - `NOTION_TOKEN`
 - `NOTION_DATABASE_ID`
 - `NOTION_DATE_PROPERTY`
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
 - `TZ`
+
+`GEMINI_MODEL` の既定値は `gemini-2.5-flash-lite` です。2026年3月9日時点で Google の公式ドキュメントにある安定版の軽量モデルです。
 
 ## Notion 側の書き方
 
@@ -110,13 +112,17 @@ gh auth login -h github.com -p https -w
 gh repo create senri1101/work-log --private --source=. --remote=origin --push
 ```
 
+## Gemini API キー
+
+Google AI Studio で API キーを作成し、`.env` と GitHub Secrets に設定してください。
+
 ## GitHub Actions の Secrets
 
 - `NOTION_TOKEN`
 - `NOTION_DATABASE_ID`
 - `NOTION_DATE_PROPERTY`
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
 
 ## 補足
 

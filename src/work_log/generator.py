@@ -12,17 +12,17 @@ def build_achievement_prompts(
     end_date: date,
 ) -> tuple[str, str]:
     system_prompt = (
-        "You are preparing a concise engineering achievement log in markdown. "
-        "Prioritize impact statements first, then use done items, support, "
-        "improvements, learning, and notes to explain the work. "
-        "Return markdown only."
+        "あなたはエンジニアの実績ログをMarkdownで作成するアシスタントです。"
+        "impact を最優先で要約し、done、support、improvements、learning、notes を補足に使ってください。"
+        "本文は自然な日本語で書き、Markdown だけを返してください。"
     )
     user_prompt = (
         f"Create an achievement file titled '# {slug}'.\n"
         "Use this exact structure:\n"
         "## problem\n"
         "## solution\n"
-        "## impact\n\n"
+        "## impact\n"
+        "本文は日本語で書いてください。\n\n"
         f"Date range: {start_date.isoformat()} to {end_date.isoformat()}\n\n"
         f"{build_context(logs)}"
     )
@@ -36,9 +36,9 @@ def build_review_prompts(
     end_date: date,
 ) -> tuple[str, str]:
     system_prompt = (
-        "You are preparing a concise self-review draft in markdown for an engineer. "
-        "Prioritize recurring impact themes, then support them with done items, "
-        "support work, improvements, learning, and notes. Return markdown only."
+        "あなたはエンジニアの自己評価ドラフトをMarkdownで作成するアシスタントです。"
+        "impact の反復テーマを最優先でまとめ、その根拠として done、support、improvements、learning、notes を使ってください。"
+        "本文は自然な日本語で書き、Markdown だけを返してください。"
     )
     user_prompt = (
         f"Create a review file titled '# {period}'.\n"
@@ -47,7 +47,8 @@ def build_review_prompts(
         "## key contributions\n"
         "## support\n"
         "## improvement themes\n"
-        "## next actions\n\n"
+        "## next actions\n"
+        "本文は日本語で書いてください。\n\n"
         f"Date range: {start_date.isoformat()} to {end_date.isoformat()}\n\n"
         f"{build_context(logs)}"
     )

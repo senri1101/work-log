@@ -34,7 +34,7 @@ class GeneratorTest(unittest.TestCase):
             date(2026, 6, 30),
         )
 
-        self.assertIn("Prioritize recurring impact themes", system_prompt)
+        self.assertIn("impact の反復テーマを最優先", system_prompt)
         self.assertIn("impact: UX improvement", user_prompt)
         self.assertIn("support:", user_prompt)
 
@@ -53,11 +53,11 @@ class GeneratorTest(unittest.TestCase):
                 encoding="utf-8",
             )
             env = {
-                "OPENAI_API_KEY": "token",
-                "OPENAI_MODEL": "test-model",
+                "GEMINI_API_KEY": "token",
+                "GEMINI_MODEL": "test-model",
             }
             with patch.dict(os.environ, env, clear=False):
-                with patch("work_log.cli.OpenAIClient") as client_cls:
+                with patch("work_log.cli.GeminiClient") as client_cls:
                     client_cls.return_value.generate_markdown.return_value = (
                         "# 2026-H1\n\n## summary\n\nShipped the work.\n"
                     )

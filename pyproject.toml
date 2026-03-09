@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "work-log"
 version = "0.1.0"
-description = "Notionの日報をMarkdownへ同期し、実績ログと自己評価ドラフトを生成するツール。"
+description = "Notionの日報をMarkdownへ同期し、Geminiで実績ログと自己評価ドラフトを生成するツール。"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []

@@ -2,17 +2,16 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
 from work_log.config import ConfigError, Settings
+from work_log.gemini_client import GeminiClient
 from work_log.generator import build_achievement_prompts, build_review_prompts
 from work_log.markdown_formatter import render_daily_log
 from work_log.models import DailyLog
 from work_log.notion_client import NotionClient
 from work_log.notion_parser import parse_outline_text
-from work_log.openai_client import OpenAIClient
 from work_log.storage import (
     achievement_path,
     daily_log_path,
@@ -110,14 +109,14 @@ def handle_sync_range(args: argparse.Namespace, settings: Settings) -> int:
 
 
 def handle_generate_achievement(args: argparse.Namespace, settings: Settings) -> int:
-    settings.require_openai()
+    settings.require_gemini()
     start_date = parse_date(args.start_date)
     end_date = parse_date(args.end_date)
     logs = load_daily_logs(settings.root, start_date, end_date)
     if not logs:
-        raise RuntimeError("No local daily logs found in the requested range.")
+        raise RuntimeError("指定期間のローカル日報が見つかりませんでした。")
 
-    client = OpenAIClient(settings.openai_api_key or "", settings.openai_model or "")
+    client = GeminiClient(settings.gemini_api_key or "", settings.gemini_model or "")
     system_prompt, user_prompt = build_achievement_prompts(
         logs,
         args.slug,
@@ -131,14 +130,14 @@ def handle_generate_achievement(args: argparse.Namespace, settings: Settings) ->
 
 
 def handle_generate_review(args: argparse.Namespace, settings: Settings) -> int:
-    settings.require_openai()
+    settings.require_gemini()
     start_date = parse_date(args.start_date) if args.start_date else infer_period_start(args.period)
     end_date = parse_date(args.end_date) if args.end_date else infer_period_end(args.period)
     logs = load_daily_logs(settings.root, start_date, end_date)
     if not logs:
-        raise RuntimeError("No local daily logs found in the requested range.")
+        raise RuntimeError("指定期間のローカル日報が見つかりませんでした。")
 
-    client = OpenAIClient(settings.openai_api_key or "", settings.openai_model or "")
+    client = GeminiClient(settings.gemini_api_key or "", settings.gemini_model or "")
     system_prompt, user_prompt = build_review_prompts(
         logs,
         args.period,
@@ -158,7 +157,7 @@ def sync_range(
     dry_run: bool,
 ) -> int:
     if end_date < start_date:
-        raise ValueError("The end date must be on or after the start date.")
+        raise ValueError("終了日は開始日以降で指定してください。")
     settings.require_notion()
     client = NotionClient(
         settings.notion_token or "",

@@ -17,8 +17,8 @@ class Settings:
     notion_token: str | None
     notion_database_id: str | None
     notion_date_property: str | None
-    openai_api_key: str | None
-    openai_model: str | None
+    gemini_api_key: str | None
+    gemini_model: str | None
 
     @property
     def timezone(self) -> ZoneInfo:
@@ -32,8 +32,8 @@ class Settings:
             notion_token=os.getenv("NOTION_TOKEN"),
             notion_database_id=os.getenv("NOTION_DATABASE_ID"),
             notion_date_property=os.getenv("NOTION_DATE_PROPERTY"),
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            openai_model=os.getenv("OPENAI_MODEL"),
+            gemini_api_key=os.getenv("GEMINI_API_KEY"),
+            gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
         )
 
     def require_notion(self) -> None:
@@ -49,14 +49,14 @@ class Settings:
         if missing:
             raise ConfigError(f"Notion設定が不足しています: {', '.join(missing)}")
 
-    def require_openai(self) -> None:
+    def require_gemini(self) -> None:
         missing = [
             name
             for name, value in (
-                ("OPENAI_API_KEY", self.openai_api_key),
-                ("OPENAI_MODEL", self.openai_model),
+                ("GEMINI_API_KEY", self.gemini_api_key),
+                ("GEMINI_MODEL", self.gemini_model),
             )
             if not value
         ]
         if missing:
-            raise ConfigError(f"OpenAI設定が不足しています: {', '.join(missing)}")
+            raise ConfigError(f"Gemini設定が不足しています: {', '.join(missing)}")
