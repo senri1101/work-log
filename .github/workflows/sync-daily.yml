@@ -1,10 +1,10 @@
-name: Sync Daily Log
+name: 日報同期
 
 on:
   workflow_dispatch:
     inputs:
       date:
-        description: Optional date in YYYY-MM-DD format
+        description: 対象日。未指定なら当日分を同期
         required: false
         type: string
   schedule:
@@ -17,37 +17,41 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: src
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
       NOTION_DATE_PROPERTY: ${{ secrets.NOTION_DATE_PROPERTY }}
       TZ: Asia/Tokyo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - name: uv をセットアップ
+        uses: astral-sh/setup-uv@v7
         with:
+          enable-cache: true
           python-version: "3.14"
 
-      - name: Run tests
-        run: python -m unittest discover -s tests -v
+      - name: 依存関係を同期
+        run: uv sync --frozen
 
-      - name: Sync daily log
+      - name: テスト実行
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: 日報を同期
         run: |
           if [ -n "${{ github.event.inputs.date }}" ]; then
-            python -m work_log sync-daily --date "${{ github.event.inputs.date }}"
+            uv run work-log sync-daily --date "${{ github.event.inputs.date }}"
           else
-            python -m work_log sync-daily
+            uv run work-log sync-daily
           fi
 
-      - name: Commit and push
+      - name: コミットして push
         run: |
           if git diff --quiet; then
-            echo "No changes to commit."
+            echo "差分がないためコミットしません。"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add daily
-          git commit -m "chore: sync daily log"
+          git commit -m "chore: 日報を同期"
           git push

@@ -1,18 +1,18 @@
-name: Generate Review
+name: 自己評価生成
 
 on:
   workflow_dispatch:
     inputs:
       period:
-        description: Review period, for example 2026-H1
+        description: レビュー期間。例: 2026-H1
         required: true
         type: string
       from:
-        description: Optional start date override in YYYY-MM-DD format
+        description: 開始日を上書きする場合に指定
         required: false
         type: string
       to:
-        description: Optional end date override in YYYY-MM-DD format
+        description: 終了日を上書きする場合に指定
         required: false
         type: string
 
@@ -23,23 +23,27 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: src
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
       TZ: Asia/Tokyo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - name: uv をセットアップ
+        uses: astral-sh/setup-uv@v7
         with:
+          enable-cache: true
           python-version: "3.14"
 
-      - name: Run tests
-        run: python -m unittest discover -s tests -v
+      - name: 依存関係を同期
+        run: uv sync --frozen
 
-      - name: Generate review
+      - name: テスト実行
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: 自己評価ドラフトを生成
         run: |
-          CMD="python -m work_log generate-review --period '${{ github.event.inputs.period }}'"
+          CMD="uv run work-log generate-review --period '${{ github.event.inputs.period }}'"
           if [ -n "${{ github.event.inputs.from }}" ]; then
             CMD="$CMD --from '${{ github.event.inputs.from }}'"
           fi
@@ -48,14 +52,14 @@ jobs:
           fi
           eval "$CMD"
 
-      - name: Commit and push
+      - name: コミットして push
         run: |
           if git diff --quiet; then
-            echo "No changes to commit."
+            echo "差分がないためコミットしません。"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add reviews
-          git commit -m "chore: generate review ${{ github.event.inputs.period }}"
+          git commit -m "chore: 自己評価を生成 ${{ github.event.inputs.period }}"
           git push

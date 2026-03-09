@@ -47,7 +47,7 @@ class Settings:
             if not value
         ]
         if missing:
-            raise ConfigError(f"Missing Notion configuration: {', '.join(missing)}")
+            raise ConfigError(f"Notion設定が不足しています: {', '.join(missing)}")
 
     def require_openai(self) -> None:
         missing = [
@@ -59,4 +59,4 @@ class Settings:
             if not value
         ]
         if missing:
-            raise ConfigError(f"Missing OpenAI configuration: {', '.join(missing)}")
+            raise ConfigError(f"OpenAI設定が不足しています: {', '.join(missing)}")

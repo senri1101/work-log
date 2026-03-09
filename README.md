@@ -1,8 +1,8 @@
 # work-log
 
-`work-log` is a private personal knowledge base for syncing daily Notion logs into a Git repository and generating achievement or review documents from those logs.
+`work-log` は、Notion の日報を Git 管理の Markdown に同期し、実績ログや自己評価ドラフトを生成するための個人用リポジトリです。
 
-## Repository layout
+## リポジトリ構成
 
 ```text
 work-log/
@@ -16,43 +16,45 @@ work-log/
 └── src/work_log/
 ```
 
-## Daily log model
+## 日報の保存形式
 
-Notion remains the authoring surface. The canonical GitHub format stores only durable sections and drops `today`.
+Notion を入力元にしつつ、GitHub 側には長期保存したいログだけを残します。`today` は保存せず、`done` に対する `impact` を主軸に正規化します。
 
 ```md
 # 2026-03-09
 
 ## done
-- task: Settings screen fix
-  impact: UX improvement
-- task: backlog auto task validation
-  impact: Reduced production team workload
+- task: 設定画面修正
+  impact: UX改善
+- task: backlog自動タスク検証
+  impact: 制作チームの作業削減
 
 ## support
-- Responded to Wang's request
+- 王さんの確認対応
 
 ## improvements
-- Investigated retry button design
+- retryボタン検討
 
 ## learning
 - timezone handling
 
 ## notes
-- Researched release visibility controls
+- 日々の言葉の公開制御調査
 ```
 
-## Setup
+## セットアップ
 
-1. Copy `.env.example` to `.env`.
-2. Fill in the Notion and OpenAI credentials.
-3. Run commands with `PYTHONPATH=src`.
+1. `.env.example` を `.env` にコピーします。
+2. Notion と OpenAI の認証情報を設定します。
+3. `uv` で環境を同期します。
+4. 以降のコマンドは `uv run` で実行します。
 
 ```bash
 cp .env.example .env
-PYTHONPATH=src python -m unittest discover -s tests -v
-PYTHONPATH=src python -m work_log sync-daily --date 2026-03-09
-PYTHONPATH=src python -m work_log generate-review --period 2026-H1 --from 2026-01-01 --to 2026-06-30
+uv sync
+uv run python -m unittest discover -s tests -v
+uv run work-log sync-daily --date 2026-03-09
+uv run work-log generate-review --period 2026-H1 --from 2026-01-01 --to 2026-06-30
 ```
 
 ## CLI
@@ -62,7 +64,7 @@ PYTHONPATH=src python -m work_log generate-review --period 2026-H1 --from 2026-0
 - `generate-achievement --from YYYY-MM-DD --to YYYY-MM-DD --slug NAME [--dry-run]`
 - `generate-review --period PERIOD [--from YYYY-MM-DD --to YYYY-MM-DD] [--dry-run]`
 
-## Environment variables
+## 環境変数
 
 - `NOTION_TOKEN`
 - `NOTION_DATABASE_ID`
@@ -71,17 +73,54 @@ PYTHONPATH=src python -m work_log generate-review --period 2026-H1 --from 2026-0
 - `OPENAI_MODEL`
 - `TZ`
 
-## GitHub setup
+## Notion 側の書き方
 
-The current local `gh` token is invalid. Re-authenticate before creating the private repository:
+見出し名は機械処理の都合で英語固定です。本文は日本語で問題ありません。
+
+```md
+## today
+- PRレビュー
+- API確認
+
+## done
+- 設定画面修正
+  impact: UX改善
+- backlog自動タスク検証
+  impact: 制作チームの作業削減
+
+## support
+- 王さんの確認対応
+
+## improvement
+- retryボタン検討
+
+## learning
+- timezone handling
+
+## notes
+- 日々の言葉の公開制御調査
+```
+
+## GitHub 設定
+
+このマシンの `gh` トークンは現在無効です。private repository を作成する前に再認証してください。
 
 ```bash
 gh auth login -h github.com -p https -w
 gh repo create senri1101/work-log --private --source=. --remote=origin --push
 ```
 
-## Notes
+## GitHub Actions の Secrets
 
-- Notion heading aliases `task`, `tasks`, `todo`, `improvement`, and `improvements` are normalized automatically.
-- Standalone `impact` sections are accepted on import and normalized into `done` item impacts on save.
-- `learning` is optional. Empty optional sections are omitted from the saved markdown.
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID`
+- `NOTION_DATE_PROPERTY`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+
+## 補足
+
+- `task`, `tasks`, `todo`, `improvement`, `improvements` の見出し揺れは自動で正規化されます。
+- 独立した `impact` セクションがあっても、保存時には各 `done` 項目に紐づけます。
+- `learning` は任意項目です。空の場合は Markdown に出力しません。
+- `uv.lock` をコミットしているため、CI とローカルで同じ環境を使えます。

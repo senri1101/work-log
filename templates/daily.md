@@ -1,17 +1,17 @@
 # YYYY-MM-DD
 
 ## done
-- task: Example completed task
-  impact: Example business or user impact
+- task: 設定画面修正
+  impact: UX改善
 
 ## support
-- Example support task
+- 王さんの確認対応
 
 ## improvements
-- Example improvement idea
+- retryボタン検討
 
 ## learning
-- Example learning note
+- timezone handling
 
 ## notes
-- Example note
+- 日々の言葉の公開制御調査

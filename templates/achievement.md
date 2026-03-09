@@ -1,4 +1,4 @@
-# achievement-slug
+# 実績タイトル
 
 ## problem
 

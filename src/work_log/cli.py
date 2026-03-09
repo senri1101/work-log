@@ -24,28 +24,53 @@ from work_log.storage import (
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="work-log")
+    parser = argparse.ArgumentParser(
+        prog="work-log",
+        description="Notion日報を同期し、実績ログや自己評価ドラフトを生成します。",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    sync_daily = subparsers.add_parser("sync-daily")
-    sync_daily.add_argument("--date", dest="entry_date")
+    sync_daily = subparsers.add_parser(
+        "sync-daily",
+        help="指定日のNotion日報を同期します。",
+    )
+    sync_daily.add_argument("--date", dest="entry_date", help="対象日。形式は YYYY-MM-DD")
     sync_daily.add_argument("--dry-run", action="store_true")
 
-    sync_range = subparsers.add_parser("sync-range")
-    sync_range.add_argument("--from", dest="start_date", required=True)
-    sync_range.add_argument("--to", dest="end_date", required=True)
+    sync_range = subparsers.add_parser(
+        "sync-range",
+        help="指定期間のNotion日報を同期します。",
+    )
+    sync_range.add_argument(
+        "--from",
+        dest="start_date",
+        required=True,
+        help="開始日。形式は YYYY-MM-DD",
+    )
+    sync_range.add_argument(
+        "--to",
+        dest="end_date",
+        required=True,
+        help="終了日。形式は YYYY-MM-DD",
+    )
     sync_range.add_argument("--dry-run", action="store_true")
 
-    achievement = subparsers.add_parser("generate-achievement")
-    achievement.add_argument("--from", dest="start_date", required=True)
-    achievement.add_argument("--to", dest="end_date", required=True)
-    achievement.add_argument("--slug", required=True)
+    achievement = subparsers.add_parser(
+        "generate-achievement",
+        help="日報から実績ログを生成します。",
+    )
+    achievement.add_argument("--from", dest="start_date", required=True, help="開始日。形式は YYYY-MM-DD")
+    achievement.add_argument("--to", dest="end_date", required=True, help="終了日。形式は YYYY-MM-DD")
+    achievement.add_argument("--slug", required=True, help="出力ファイル名。拡張子は不要")
     achievement.add_argument("--dry-run", action="store_true")
 
-    review = subparsers.add_parser("generate-review")
-    review.add_argument("--period", required=True)
-    review.add_argument("--from", dest="start_date")
-    review.add_argument("--to", dest="end_date")
+    review = subparsers.add_parser(
+        "generate-review",
+        help="日報から自己評価ドラフトを生成します。",
+    )
+    review.add_argument("--period", required=True, help="レビュー期間。例: 2026-H1")
+    review.add_argument("--from", dest="start_date", help="開始日。形式は YYYY-MM-DD")
+    review.add_argument("--to", dest="end_date", help="終了日。形式は YYYY-MM-DD")
     review.add_argument("--dry-run", action="store_true")
 
     return parser
@@ -68,7 +93,7 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
         if args.command == "generate-review":
             return handle_generate_review(args, settings)
     except (ConfigError, RuntimeError, ValueError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        print(f"エラー: {exc}", file=sys.stderr)
         return 1
     return 0
 
@@ -164,7 +189,7 @@ def emit_result(target: Path, content: str, dry_run: bool) -> None:
         print(content, end="")
         return
     write_text(target, content)
-    print(f"Wrote {target.as_posix()}")
+    print(f"書き込みました: {target.as_posix()}")
 
 
 def parse_date(value: str) -> date:
@@ -182,7 +207,7 @@ def infer_period_start(period: str) -> date:
         return date(year, 1, 1)
     if half.upper() == "H2":
         return date(year, 7, 1)
-    raise ValueError("Period must look like YYYY-H1 or YYYY-H2.")
+    raise ValueError("period は YYYY-H1 または YYYY-H2 の形式で指定してください。")
 
 
 def infer_period_end(period: str) -> date:
@@ -192,4 +217,4 @@ def infer_period_end(period: str) -> date:
         return date(year, 6, 30)
     if half.upper() == "H2":
         return date(year, 12, 31)
-    raise ValueError("Period must look like YYYY-H1 or YYYY-H2.")
+    raise ValueError("period は YYYY-H1 または YYYY-H2 の形式で指定してください。")
