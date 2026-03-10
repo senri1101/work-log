@@ -58,7 +58,8 @@ Git に残すのは `daily/` 以下の Markdown が中心です。
 ### 1. Tauri アプリを使う
 
 ```bash
-cd /Users/senri.gotoda/Desktop/Repositories/work-log
+git clone https://github.com/senri1101/work-log.git
+cd work-log
 pnpm install
 pnpm tauri dev
 ```
@@ -97,17 +98,17 @@ uv run python -m unittest discover -s tests -v
 
 ## GitHub 設定
 
-private repository を作成する場合:
+ログ用 repo を作る場合:
 
 ```bash
 gh auth login -h github.com -p https -w
-gh repo create senri1101/work-log --private --source=. --remote=origin --push
+gh repo create YOUR_NAME/work-log-data --private --clone --add-readme
 ```
 
 ## LP / GitHub Pages
 
 LP は `docs/` 配下の静的ファイルとして管理しています。  
-`main` に push されると [deploy-pages.yml](/Users/senri.gotoda/Desktop/Repositories/work-log/.github/workflows/deploy-pages.yml) で GitHub Pages に反映されます。
+`main` に push されると `.github/workflows/deploy-pages.yml` で GitHub Pages に反映されます。
 
 ## メモ
 
