@@ -156,6 +156,21 @@ a {
   color: var(--muted);
 }
 
+.download-note {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.download-note p {
+  margin: 0;
+}
+
+.download-note p + p {
+  margin-top: 4px;
+}
+
 .hero-points li::before {
   content: "·";
   margin-right: 10px;
@@ -276,9 +291,60 @@ a {
 
 .feature-grid,
 .flow-grid,
-.structure-grid {
+.structure-grid,
+.download-grid {
   display: grid;
   gap: 16px;
+}
+
+.download-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.download-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.download-label {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.download-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.download-card p {
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.download-card pre {
+  margin: 18px 0 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f6f6f3;
+  border: 1px solid rgba(35, 40, 39, 0.08);
+  overflow-x: auto;
+}
+
+.download-card code {
+  font-family: "SF Mono", "Menlo", monospace;
+  color: #49514f;
+  line-height: 1.7;
+}
+
+.download-footnote {
+  margin-top: 14px;
+  font-size: 13px;
 }
 
 .feature-grid {
@@ -371,6 +437,7 @@ a {
 
 @media (max-width: 1100px) {
   .hero-grid,
+  .download-grid,
   .feature-grid,
   .flow-grid,
   .structure-grid {

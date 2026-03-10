@@ -45,6 +45,7 @@
             <span class="brand-name">work-log</span>
           </div>
           <div class="nav-links">
+            <a href="#download">入手方法</a>
             <a href="#features">特徴</a>
             <a href="#flow">流れ</a>
             <a href="#structure">保存形式</a>
@@ -60,8 +61,12 @@
               Markdown と GitHub に蓄積して、実績整理や自己評価に使える形へ変換するための Tauri アプリです。
             </p>
             <div class="hero-actions">
-              <a class="button primary" href="https://github.com/senri1101/work-log">GitHubを見る</a>
-              <a class="button ghost" href="#flow">使い方を見る</a>
+              <a class="button primary" href="#download">入手方法を見る</a>
+              <a class="button ghost" href="https://github.com/senri1101/work-log">GitHubを見る</a>
+            </div>
+            <div class="download-note">
+              <p>いまは macOS 向け `.app` の利用を前提にしています。</p>
+              <p>GitHub Releases での配布は次の段階です。</p>
             </div>
             <ul class="hero-points">
               <li>today はチェックボックスで管理</li>
@@ -115,6 +120,37 @@
       </header>
 
       <main>
+        <section id="download" class="section download-section">
+          <div class="section-heading">
+            <p class="eyebrow">Download</p>
+            <h2>今の入手方法</h2>
+          </div>
+          <div class="download-grid">
+            <article class="download-card">
+              <p class="download-label">方法 1</p>
+              <h3>ソースから `.app` を作る</h3>
+              <p>
+                現時点ではこの方法が確実です。リポジトリを clone して
+                `pnpm tauri build --bundles app` を実行すると、macOS 用の
+                `work-log.app` を作れます。
+              </p>
+              <pre><code>git clone https://github.com/senri1101/work-log.git
+cd work-log
+pnpm install
+pnpm tauri build --bundles app</code></pre>
+            </article>
+            <article class="download-card">
+              <p class="download-label">出力先</p>
+              <h3>生成されるファイル</h3>
+              <p>ビルド後の `.app` は次の場所に出力されます。</p>
+              <pre><code>src-tauri/target/release/bundle/macos/work-log.app</code></pre>
+              <p class="download-footnote">
+                `.dmg` は環境によって失敗することがあるため、まずは `.app` 配布を前提にしています。
+              </p>
+            </article>
+          </div>
+        </section>
+
         <section id="features" class="section feature-section">
           <div class="section-heading">
             <p class="eyebrow">Features</p>
