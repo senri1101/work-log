@@ -78,6 +78,7 @@ uv run python -m unittest discover -s tests -v
 3. 必要なら `impact` を書く
 4. `support`, `improvements`, `learning`, `notes` を追記する
 5. 保存すると `daily/YYYY/YYYY-MM-DD.md` が更新される
+6. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
 
 ## Gemini 生成コマンド
 

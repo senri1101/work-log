@@ -119,6 +119,7 @@ textarea {
 
 input[type="date"],
 textarea,
+.git-form input[type="text"],
 .today-input,
 .impact-input {
   width: 100%;
@@ -133,6 +134,15 @@ input[type="date"] {
   min-width: 220px;
 }
 
+.git-form input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
 textarea {
   resize: vertical;
   min-height: 140px;
@@ -142,6 +152,7 @@ textarea {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -164,6 +175,14 @@ button.primary {
 
 button.primary:hover {
   background: var(--primary-strong);
+}
+
+button.primary.secondary {
+  background: #9d5a2f;
+}
+
+button.primary.secondary:hover {
+  background: #7f4825;
 }
 
 button.ghost {
@@ -292,6 +311,31 @@ button.ghost {
   border-radius: 20px;
   padding: 18px;
   min-height: 180px;
+}
+
+.git-form {
+  display: grid;
+  gap: 14px;
+}
+
+.git-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.git-output {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  font-family: "SF Mono", "Menlo", monospace;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(119, 96, 79, 0.14);
+  border-radius: 20px;
+  padding: 16px;
+  min-height: 96px;
 }
 
 code {

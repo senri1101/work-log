@@ -9,12 +9,16 @@ const elements = {
   entryDate: document.querySelector("#entryDate"),
   reloadButton: document.querySelector("#reloadButton"),
   saveButton: document.querySelector("#saveButton"),
+  pushButton: document.querySelector("#pushButton"),
+  gitStatusButton: document.querySelector("#gitStatusButton"),
   addTodayItemButton: document.querySelector("#addTodayItemButton"),
   todayItems: document.querySelector("#todayItems"),
   supportInput: document.querySelector("#supportInput"),
   improvementsInput: document.querySelector("#improvementsInput"),
   learningInput: document.querySelector("#learningInput"),
   notesInput: document.querySelector("#notesInput"),
+  commitMessage: document.querySelector("#commitMessage"),
+  gitStatusOutput: document.querySelector("#gitStatusOutput"),
   preview: document.querySelector("#preview"),
   status: document.querySelector("#status"),
   workspacePath: document.querySelector("#workspacePath"),
@@ -52,6 +56,10 @@ function linesFromTextarea(value) {
 function setStatus(message, kind = "") {
   elements.status.textContent = message;
   elements.status.className = `status${kind ? ` ${kind}` : ""}`;
+}
+
+function defaultCommitMessage(date) {
+  return `chore: daily log ${date}`;
 }
 
 function renderTodayItems() {
@@ -146,12 +154,15 @@ async function loadEntry(date) {
     state.entry = payload.entry || emptyEntry(date);
     elements.workspacePath.textContent = state.workspacePath;
     elements.entryDate.value = state.entry.date;
+    elements.commitMessage.value = defaultCommitMessage(state.entry.date);
     syncInputsFromEntry();
     elements.preview.textContent = state.entry.markdownPreview || "";
     await refreshPreview();
+    await refreshGitStatus();
     setStatus("読み込みました。", "success");
   } catch (error) {
     state.entry = emptyEntry(date);
+    elements.commitMessage.value = defaultCommitMessage(date);
     syncInputsFromEntry();
     elements.preview.textContent = state.entry.markdownPreview;
     setStatus(`新規日報として開始します: ${error}`, "error");
@@ -167,9 +178,41 @@ async function saveEntry() {
     elements.workspacePath.textContent = result.workspacePath;
     state.entry.markdownPreview = result.markdown;
     elements.preview.textContent = result.markdown;
+    await refreshGitStatus();
     setStatus(`保存しました: ${result.markdownPath}`, "success");
+    return true;
   } catch (error) {
     setStatus(`保存に失敗しました: ${error}`, "error");
+    return false;
+  }
+}
+
+async function refreshGitStatus() {
+  try {
+    const result = await invoke("git_status");
+    elements.gitStatusOutput.textContent = result.statusText;
+  } catch (error) {
+    elements.gitStatusOutput.textContent = `Git 状態の取得に失敗しました: ${error}`;
+  }
+}
+
+async function saveAndPush() {
+  const saved = await saveEntry();
+  if (!saved || !state.entry) {
+    return;
+  }
+
+  setStatus("commit と push を実行しています...");
+  try {
+    const result = await invoke("git_commit_and_push", {
+      commitMessage:
+        elements.commitMessage.value.trim() || defaultCommitMessage(state.entry.date),
+    });
+    elements.gitStatusOutput.textContent = result.statusText;
+    setStatus(result.summary, "success");
+  } catch (error) {
+    setStatus(`push に失敗しました: ${error}`, "error");
+    await refreshGitStatus();
   }
 }
 
@@ -181,6 +224,8 @@ function bindEvents() {
     loadEntry(elements.entryDate.value);
   });
   elements.saveButton.addEventListener("click", saveEntry);
+  elements.pushButton.addEventListener("click", saveAndPush);
+  elements.gitStatusButton.addEventListener("click", refreshGitStatus);
   elements.addTodayItemButton.addEventListener("click", () => {
     state.entry.today.push(defaultTodayItem());
     renderTodayItems();

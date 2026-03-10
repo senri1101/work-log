@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -36,6 +37,19 @@ struct SaveEntryResponse {
     markdown_path: String,
     state_path: String,
     markdown: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GitStatusResponse {
+    status_text: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GitPushResponse {
+    status_text: String,
+    summary: String,
 }
 
 #[tauri::command]
@@ -94,6 +108,49 @@ fn save_entry(entry: EntryPayload) -> Result<SaveEntryResponse, String> {
         markdown_path: markdown_path.display().to_string(),
         state_path: state_path.display().to_string(),
         markdown,
+    })
+}
+
+#[tauri::command]
+fn git_status() -> Result<GitStatusResponse, String> {
+    let workspace = workspace_root()?;
+    let branch = run_git_command(&workspace, &["status", "--short", "--branch"])?;
+    let remote = run_git_command(&workspace, &["remote", "-v"])?;
+    Ok(GitStatusResponse {
+        status_text: format!("{branch}\n\n{remote}").trim().to_string(),
+    })
+}
+
+#[tauri::command]
+fn git_commit_and_push(commit_message: String) -> Result<GitPushResponse, String> {
+    let workspace = workspace_root()?;
+    let status_before = run_git_command(&workspace, &["status", "--short"])?;
+
+    if !status_before.trim().is_empty() {
+        run_git_command(
+            &workspace,
+            &[
+                "add",
+                "daily",
+                "achievements",
+                "reviews",
+                "weekly",
+                "tech-notes",
+            ],
+        )?;
+
+        let staged = run_git_command(&workspace, &["diff", "--cached", "--name-only"])?;
+        if !staged.trim().is_empty() {
+            run_git_command(&workspace, &["commit", "-m", commit_message.trim()])?;
+        }
+    }
+
+    let push_output = run_git_command(&workspace, &["push", "origin", "main"])?;
+    let status_after = run_git_command(&workspace, &["status", "--short", "--branch"])?;
+
+    Ok(GitPushResponse {
+        status_text: format!("{status_after}\n\n{push_output}").trim().to_string(),
+        summary: "commit と push が完了しました。".to_string(),
     })
 }
 
@@ -207,9 +264,40 @@ fn ensure_parent(path: &Path) -> Result<(), String> {
         .map_err(|err| format!("ディレクトリ作成に失敗しました ({}): {err}", parent.display()))
 }
 
+fn run_git_command(workspace: &Path, args: &[&str]) -> Result<String, String> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(workspace)
+        .output()
+        .map_err(|err| format!("git コマンドの起動に失敗しました: {err}"))?;
+
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        if stdout.is_empty() {
+            Ok(stderr)
+        } else if stderr.is_empty() {
+            Ok(stdout)
+        } else {
+            Ok(format!("{stdout}\n{stderr}"))
+        }
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let detail = if !stderr.is_empty() { stderr } else { stdout };
+        Err(format!("git {} に失敗しました: {}", args.join(" "), detail))
+    }
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![load_entry, render_markdown, save_entry])
+        .invoke_handler(tauri::generate_handler![
+            load_entry,
+            render_markdown,
+            save_entry,
+            git_status,
+            git_commit_and_push
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

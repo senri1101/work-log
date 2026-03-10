@@ -39,6 +39,8 @@
             <input id="entryDate" type="date" />
           </div>
           <div class="toolbar">
+            <button id="gitStatusButton" class="ghost">Git 状態更新</button>
+            <button id="pushButton" class="primary secondary">保存して push</button>
             <button id="reloadButton" class="ghost">再読み込み</button>
             <button id="saveButton" class="primary">保存</button>
           </div>
@@ -107,6 +109,29 @@
             </div>
           </div>
           <pre id="preview" class="preview"></pre>
+        </section>
+
+        <section class="panel git-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-title">Git / GitHub</p>
+              <p class="panel-copy">UI から commit と push を実行します。</p>
+            </div>
+          </div>
+          <div class="git-form">
+            <div>
+              <label for="commitMessage">commit message</label>
+              <input
+                id="commitMessage"
+                type="text"
+                placeholder="chore: daily log 2026-03-10"
+              />
+            </div>
+            <div>
+              <p class="meta-label">status</p>
+              <pre id="gitStatusOutput" class="git-output"></pre>
+            </div>
+          </div>
         </section>
       </main>
     </div>
