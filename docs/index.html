@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>work-log | 日報をキャリア資産に変える</title>
+    <meta
+      name="description"
+      content="work-log は、日報を Markdown と GitHub に蓄積し、あとで実績・自己評価・振り返りに変換できる macOS アプリです。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="nav">
+          <div class="brand">
+            <span class="brand-mark">WL</span>
+            <span class="brand-name">work-log</span>
+          </div>
+          <div class="nav-links">
+            <a href="#features">特徴</a>
+            <a href="#flow">流れ</a>
+            <a href="#structure">保存形式</a>
+          </div>
+        </nav>
+
+        <section class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">macOS Daily Log App</p>
+            <h1>日報を、あとから効く<br />キャリア資産にする。</h1>
+            <p class="lead">
+              work-log は、毎日の作業メモをその場限りで終わらせず、
+              Markdown と GitHub に蓄積して、実績整理や自己評価に使える形へ変換するための Tauri アプリです。
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="https://github.com/senri1101/work-log">GitHubを見る</a>
+              <a class="button ghost" href="#flow">使い方を見る</a>
+            </div>
+            <ul class="hero-points">
+              <li>today はチェックボックスで管理</li>
+              <li>完了した項目だけを done として保存</li>
+              <li>UI から commit / push まで完結</li>
+            </ul>
+          </div>
+
+          <div class="hero-card">
+            <div class="card-window">
+              <div class="window-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="window-content">
+                <div class="window-head">
+                  <p>2026-03-10</p>
+                  <span>保存済み</span>
+                </div>
+                <div class="todo-row checked">
+                  <div class="checkbox"></div>
+                  <div>
+                    <p>設定画面修正</p>
+                    <small>impact: UX改善</small>
+                  </div>
+                </div>
+                <div class="todo-row checked">
+                  <div class="checkbox"></div>
+                  <div>
+                    <p>backlog自動タスク検証</p>
+                    <small>impact: 制作チームの作業削減</small>
+                  </div>
+                </div>
+                <div class="todo-row">
+                  <div class="checkbox hollow"></div>
+                  <div>
+                    <p>API確認</p>
+                    <small>未完了のため Markdown には出さない</small>
+                  </div>
+                </div>
+                <div class="markdown-block">
+                  <p># 2026-03-10</p>
+                  <p>## done</p>
+                  <p>- task: 設定画面修正</p>
+                  <p>&nbsp;&nbsp;impact: UX改善</p>
+                  <p>- task: backlog自動タスク検証</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <main>
+        <section id="features" class="section feature-section">
+          <div class="section-heading">
+            <p class="eyebrow">Features</p>
+            <h2>日報を書くだけで、あとから使える形に整う。</h2>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <p class="feature-number">01</p>
+              <h3>チェックボックス起点</h3>
+              <p>
+                today を並べて、終わった項目だけにチェックを入れます。完了済みだけが done に変換されるので、
+                TODO とログが自然に分離されます。
+              </p>
+            </article>
+            <article class="feature-card">
+              <p class="feature-number">02</p>
+              <h3>impact を残せる</h3>
+              <p>
+                各タスクに impact を添えられるため、半年後に「何をしたか」ではなく
+                「どんな価値を出したか」で振り返れます。
+              </p>
+            </article>
+            <article class="feature-card">
+              <p class="feature-number">03</p>
+              <h3>Markdown と GitHub へ蓄積</h3>
+              <p>
+                日報は `daily/YYYY/YYYY-MM-DD.md` に保存。UI から commit / push まで実行できるので、
+                リポジトリがそのまま自分の仕事ログになります。
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="flow" class="section flow-section">
+          <div class="section-heading">
+            <p class="eyebrow">Flow</p>
+            <h2>日報から実績までの流れ</h2>
+          </div>
+          <div class="flow-grid">
+            <div class="flow-step">
+              <span>1</span>
+              <h3>today を書く</h3>
+              <p>その日やることをアプリに追加する。</p>
+            </div>
+            <div class="flow-step">
+              <span>2</span>
+              <h3>終わったらチェック</h3>
+              <p>完了したらチェックを入れ、必要なら impact を追記する。</p>
+            </div>
+            <div class="flow-step">
+              <span>3</span>
+              <h3>Markdown 化</h3>
+              <p>保存時にチェック済みだけが done に正規化される。</p>
+            </div>
+            <div class="flow-step">
+              <span>4</span>
+              <h3>GitHub に蓄積</h3>
+              <p>UI からそのまま commit / push して、自分のログ資産にする。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="structure" class="section structure-section">
+          <div class="section-heading">
+            <p class="eyebrow">Structure</p>
+            <h2>保存される形式</h2>
+          </div>
+          <div class="structure-grid">
+            <div class="structure-card">
+              <p class="structure-label">編集中の状態</p>
+              <code>.work-log-state/entries/YYYY/YYYY-MM-DD.json</code>
+            </div>
+            <div class="structure-card">
+              <p class="structure-label">正式な日報</p>
+              <code>daily/YYYY/YYYY-MM-DD.md</code>
+            </div>
+            <div class="structure-card wide">
+              <p class="structure-label">Markdown 例</p>
+              <pre>
+# 2026-03-10
+
+## done
+- task: 設定画面修正
+  impact: UX改善
+
+## support
+- 王さんの確認対応
+
+## improvements
+- retryボタン検討
+              </pre>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

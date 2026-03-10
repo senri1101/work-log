@@ -102,6 +102,11 @@ gh auth login -h github.com -p https -w
 gh repo create senri1101/work-log --private --source=. --remote=origin --push
 ```
 
+## LP / GitHub Pages
+
+LP は `docs/` 配下の静的ファイルとして管理しています。  
+`main` に push されると [deploy-pages.yml](/Users/senri.gotoda/Desktop/Repositories/work-log/.github/workflows/deploy-pages.yml) で GitHub Pages に反映されます。
+
 ## メモ
 
 - Tauri アプリは保存時に `today` をそのまま Markdown へ出さず、チェック済み項目だけを `done` に変換します。
