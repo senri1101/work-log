@@ -1,7 +1,10 @@
 # work-log
 
-`work-log` は、Tauri 製の macOS 日報アプリで日々の作業を記録し、その内容を Git 管理しやすい Markdown に保存するための個人用リポジトリです。  
-必要に応じて、蓄積した日報から Gemini で実績ログや自己評価ドラフトも生成できます。
+`work-log` は、Tauri 製の macOS 日報アプリです。  
+その日の作業を Markdown と Git に残しやすい形に整えます。
+
+アプリ本体の repo と、日報の実データ repo は分離して使えます。  
+初回起動後に保存先として任意のログ用 repo を設定すると、その配下に `daily/`, `weekly/`, `reviews/`, `achievements/`, `tech-notes/`, `.work-log-state/` を作成します。
 
 ## いまの構成
 
@@ -13,13 +16,14 @@ work-log/
 └── src/work_log/         # Gemini 生成用の Python CLI
 ```
 
-## アプリの役割
+## できること
 
-アプリでは `today` をチェックボックス付きで管理します。  
-終わった項目にチェックを入れて `impact` を書くと、保存時にチェック済みの項目だけが `done` として Markdown に出力されます。
-
-アプリ本体の repo と、日報の実データ repo は分離して使えます。  
-初回起動後に保存先として任意のログ用 repo を設定すると、その配下に `daily/`, `weekly/`, `reviews/`, `achievements/`, `tech-notes/`, `.work-log-state/` を作成します。
+- `today` をチェック付きで管理
+- 完了したものだけを `done` として Markdown 化
+- 未完了タスクを翌日に持ち越し
+- 任意のログ用 repo に保存
+- UI から commit / push
+- Gemini で実績ログや自己評価ドラフトを生成
 
 保存される Markdown 例:
 
@@ -63,6 +67,21 @@ cd work-log
 pnpm install
 pnpm tauri dev
 ```
+
+### 1.5 配布用ビルドを作る
+
+```bash
+pnpm tauri build --bundles app
+```
+
+生成物の例:
+
+- `src-tauri/target/release/bundle/macos/work-log.app`
+
+`.dmg` まで欲しい場合は `pnpm tauri build` を使えますが、環境によっては `bundle_dmg.sh` 側で失敗することがあります。  
+まずは `.app` 配布を基準にするのが安全です。
+
+未署名ビルドなので、他の Mac へ配る場合は署名や notarization を別途検討してください。
 
 ### 2. Gemini 生成を使う
 
