@@ -150,7 +150,7 @@ fn git_commit_and_push(commit_message: String) -> Result<GitPushResponse, String
 
     Ok(GitPushResponse {
         status_text: format!("{status_after}\n\n{push_output}").trim().to_string(),
-        summary: "commit と push が完了しました。".to_string(),
+        summary: "反映しました。".to_string(),
     })
 }
 

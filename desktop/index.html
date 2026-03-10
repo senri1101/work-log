@@ -10,24 +10,19 @@
     <div class="shell">
       <aside class="sidebar">
         <p class="eyebrow">Work Log</p>
-        <h1>日報を資産化する</h1>
-        <p class="lead">
-          その日の作業を記録しつつ、残したい情報だけを Markdown に正規化します。
-        </p>
+        <h1>静かな作業ログ</h1>
+        <p class="lead">残したいことだけを、静かに整えます。</p>
         <div class="meta-card">
           <p class="meta-label">保存先</p>
           <p id="workspacePath" class="meta-value"></p>
-          <p class="meta-note">
-            日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。編集中の状態は
-            <code>.work-log-state</code> に保持します。
-          </p>
+          <p class="meta-note">日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。</p>
         </div>
         <div class="meta-card">
-          <p class="meta-label">使い方</p>
+          <p class="meta-label">流れ</p>
           <ol class="steps">
-            <li>today に今日やることを追加</li>
-            <li>終わったらチェックを入れて impact を書く</li>
-            <li>保存するとチェック済みだけが done として出力</li>
+            <li>today を書く</li>
+            <li>終わったら印をつける</li>
+            <li>保存すると done に整う</li>
           </ol>
         </div>
       </aside>
@@ -39,9 +34,9 @@
             <input id="entryDate" type="date" />
           </div>
           <div class="toolbar">
-            <button id="gitStatusButton" class="ghost">Git 状態更新</button>
-            <button id="pushButton" class="primary secondary">保存して push</button>
-            <button id="reloadButton" class="ghost">再読み込み</button>
+            <button id="gitStatusButton" class="ghost">状態を見る</button>
+            <button id="pushButton" class="primary secondary">保存して反映</button>
+            <button id="reloadButton" class="ghost">読み直す</button>
             <button id="saveButton" class="primary">保存</button>
           </div>
         </section>
@@ -52,9 +47,9 @@
           <div class="panel-head">
             <div>
               <p class="panel-title">today</p>
-              <p class="panel-copy">チェックを入れたものだけ Markdown の done に反映します。</p>
+              <p class="panel-copy">印をつけたものだけ残ります。</p>
             </div>
-            <button id="addTodayItemButton" class="ghost">行を追加</button>
+            <button id="addTodayItemButton" class="ghost">追加</button>
           </div>
           <div id="todayItems" class="today-list"></div>
         </section>
@@ -64,7 +59,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">support</p>
-                <p class="panel-copy">1行に1項目で書いてください。</p>
+                <p class="panel-copy">1行ずつ。</p>
               </div>
             </div>
             <textarea id="supportInput" rows="7"></textarea>
@@ -74,7 +69,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">improvements</p>
-                <p class="panel-copy">改善アイデアや次に試したいこと。</p>
+                <p class="panel-copy">次に触れたいこと。</p>
               </div>
             </div>
             <textarea id="improvementsInput" rows="7"></textarea>
@@ -84,7 +79,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">learning</p>
-                <p class="panel-copy">学んだこと。任意です。</p>
+                <p class="panel-copy">あれば。</p>
               </div>
             </div>
             <textarea id="learningInput" rows="7"></textarea>
@@ -94,7 +89,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">notes</p>
-                <p class="panel-copy">メモや調査ログ。</p>
+                <p class="panel-copy">メモ。</p>
               </div>
             </div>
             <textarea id="notesInput" rows="7"></textarea>
@@ -104,8 +99,8 @@
         <section class="panel preview-panel">
           <div class="panel-head compact">
             <div>
-              <p class="panel-title">Markdown プレビュー</p>
-              <p class="panel-copy">保存内容のプレビューです。</p>
+              <p class="panel-title">Markdown</p>
+              <p class="panel-copy">保存される形。</p>
             </div>
           </div>
           <pre id="preview" class="preview"></pre>
@@ -115,12 +110,12 @@
           <div class="panel-head compact">
             <div>
               <p class="panel-title">Git / GitHub</p>
-              <p class="panel-copy">UI から commit と push を実行します。</p>
+              <p class="panel-copy">ここから反映できます。</p>
             </div>
           </div>
           <div class="git-form">
             <div>
-              <label for="commitMessage">commit message</label>
+              <label for="commitMessage">メッセージ</label>
               <input
                 id="commitMessage"
                 type="text"
@@ -128,7 +123,7 @@
               />
             </div>
             <div>
-              <p class="meta-label">status</p>
+              <p class="meta-label">状態</p>
               <pre id="gitStatusOutput" class="git-output"></pre>
             </div>
           </div>
