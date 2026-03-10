@@ -10,8 +10,8 @@
     <div class="shell">
       <aside class="sidebar">
         <p class="eyebrow">Work Log</p>
-        <h1>静かな作業ログ</h1>
-        <p class="lead">残したいことだけを、静かに整えます。</p>
+        <h1>作業ログ</h1>
+        <p class="lead">その日に残したいことを、見返しやすい形に整えます。</p>
         <div class="meta-card">
           <p class="meta-label">保存先</p>
           <p id="workspacePath" class="meta-value"></p>
@@ -22,7 +22,7 @@
           <ol class="steps">
             <li>today を書く</li>
             <li>終わったら印をつける</li>
-            <li>保存すると done に整う</li>
+            <li>保存すると done になる</li>
           </ol>
         </div>
       </aside>
@@ -34,7 +34,7 @@
             <input id="entryDate" type="date" />
           </div>
           <div class="toolbar">
-            <button id="gitStatusButton" class="ghost">状態を見る</button>
+            <button id="gitStatusButton" class="ghost">状態</button>
             <button id="pushButton" class="primary secondary">保存して反映</button>
             <button id="reloadButton" class="ghost">読み直す</button>
             <button id="saveButton" class="primary">保存</button>
@@ -47,7 +47,7 @@
           <div class="panel-head">
             <div>
               <p class="panel-title">today</p>
-              <p class="panel-copy">印をつけたものだけ残ります。</p>
+              <p class="panel-copy">終わったものだけ残ります。</p>
             </div>
             <button id="addTodayItemButton" class="ghost">追加</button>
           </div>
@@ -59,7 +59,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">support</p>
-                <p class="panel-copy">1行ずつ。</p>
+                <p class="panel-copy">手伝ったこと。</p>
               </div>
             </div>
             <textarea id="supportInput" rows="7"></textarea>
@@ -69,7 +69,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">improvements</p>
-                <p class="panel-copy">次に触れたいこと。</p>
+                <p class="panel-copy">次に試すこと。</p>
               </div>
             </div>
             <textarea id="improvementsInput" rows="7"></textarea>
@@ -79,7 +79,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">learning</p>
-                <p class="panel-copy">あれば。</p>
+                <p class="panel-copy">気づきがあれば。</p>
               </div>
             </div>
             <textarea id="learningInput" rows="7"></textarea>
@@ -89,7 +89,7 @@
             <div class="panel-head compact">
               <div>
                 <p class="panel-title">notes</p>
-                <p class="panel-copy">メモ。</p>
+                <p class="panel-copy">短いメモ。</p>
               </div>
             </div>
             <textarea id="notesInput" rows="7"></textarea>
@@ -100,7 +100,7 @@
           <div class="panel-head compact">
             <div>
               <p class="panel-title">Markdown</p>
-              <p class="panel-copy">保存される形。</p>
+              <p class="panel-copy">保存される形です。</p>
             </div>
           </div>
           <pre id="preview" class="preview"></pre>
@@ -110,7 +110,7 @@
           <div class="panel-head compact">
             <div>
               <p class="panel-title">Git / GitHub</p>
-              <p class="panel-copy">ここから反映できます。</p>
+              <p class="panel-copy">必要ならここで反映します。</p>
             </div>
           </div>
           <div class="git-form">

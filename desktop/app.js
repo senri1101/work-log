@@ -83,7 +83,7 @@ function renderTodayItems() {
     const taskInput = document.createElement("textarea");
     taskInput.className = "today-input";
     taskInput.rows = 2;
-    taskInput.placeholder = "やること、または残すこと";
+    taskInput.placeholder = "やること";
     taskInput.value = item.task;
     taskInput.addEventListener("input", () => {
       item.task = taskInput.value;
@@ -93,7 +93,7 @@ function renderTodayItems() {
     const impactInput = document.createElement("textarea");
     impactInput.className = "impact-input";
     impactInput.rows = 2;
-    impactInput.placeholder = "impact";
+    impactInput.placeholder = "影響や価値";
     impactInput.value = item.impact;
     impactInput.disabled = !item.checked;
     impactInput.addEventListener("input", () => {
@@ -104,7 +104,7 @@ function renderTodayItems() {
     const removeButton = document.createElement("button");
     removeButton.type = "button";
     removeButton.className = "remove-button";
-    removeButton.textContent = "消す";
+    removeButton.textContent = "削除";
     removeButton.disabled = state.entry.today.length === 1;
     removeButton.addEventListener("click", () => {
       state.entry.today.splice(index, 1);
@@ -142,12 +142,12 @@ async function refreshPreview() {
     state.entry.markdownPreview = markdown;
     elements.preview.textContent = markdown;
   } catch (error) {
-    setStatus(`プレビューを作れませんでした: ${error}`, "error");
+    setStatus(`プレビューを表示できませんでした: ${error}`, "error");
   }
 }
 
 async function loadEntry(date) {
-  setStatus("開いています...");
+  setStatus("読み込み中です...");
   try {
     const payload = await invoke("load_entry", { date });
     state.workspacePath = payload.workspacePath;
@@ -159,13 +159,13 @@ async function loadEntry(date) {
     elements.preview.textContent = state.entry.markdownPreview || "";
     await refreshPreview();
     await refreshGitStatus();
-    setStatus("開きました。", "success");
+    setStatus("読み込みました。", "success");
   } catch (error) {
     state.entry = emptyEntry(date);
     elements.commitMessage.value = defaultCommitMessage(date);
     syncInputsFromEntry();
     elements.preview.textContent = state.entry.markdownPreview;
-    setStatus(`新しく始めます: ${error}`, "error");
+    setStatus(`読み込めませんでした: ${error}`, "error");
   }
 }
 
@@ -192,7 +192,7 @@ async function refreshGitStatus() {
     const result = await invoke("git_status");
     elements.gitStatusOutput.textContent = result.statusText;
   } catch (error) {
-    elements.gitStatusOutput.textContent = `状態を読めませんでした: ${error}`;
+    elements.gitStatusOutput.textContent = `状態を表示できませんでした: ${error}`;
   }
 }
 
