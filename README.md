@@ -9,9 +9,6 @@
 work-log/
 ├── desktop/              # Tauri のフロントエンド
 ├── src-tauri/            # Tauri の Rust バックエンド
-├── daily/                # 生成される日報 Markdown
-├── achievements/         # 実績ログ
-├── reviews/              # 自己評価ドラフト
 ├── templates/
 └── src/work_log/         # Gemini 生成用の Python CLI
 ```
@@ -20,6 +17,9 @@ work-log/
 
 アプリでは `today` をチェックボックス付きで管理します。  
 終わった項目にチェックを入れて `impact` を書くと、保存時にチェック済みの項目だけが `done` として Markdown に出力されます。
+
+アプリ本体の repo と、日報の実データ repo は分離して使えます。  
+初回起動後に保存先として任意のログ用 repo を設定すると、その配下に `daily/`, `weekly/`, `reviews/`, `achievements/`, `tech-notes/`, `.work-log-state/` を作成します。
 
 保存される Markdown 例:
 
@@ -47,8 +47,8 @@ work-log/
 
 ## データ保存先
 
-- 編集中の状態: `.work-log-state/entries/YYYY/YYYY-MM-DD.json`
-- 正式な日報: `daily/YYYY/YYYY-MM-DD.md`
+- 編集中の状態: `<ログ用repo>/.work-log-state/entries/YYYY/YYYY-MM-DD.json`
+- 正式な日報: `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md`
 
 `.work-log-state` は Git 管理しません。  
 Git に残すのは `daily/` 以下の Markdown が中心です。
@@ -77,8 +77,9 @@ uv run python -m unittest discover -s tests -v
 2. 完了したらチェックを入れる
 3. 必要なら `impact` を書く
 4. `support`, `improvements`, `learning`, `notes` を追記する
-5. 保存すると `daily/YYYY/YYYY-MM-DD.md` が更新される
-6. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
+5. 初回は左側でログ用 repo のパスを設定する
+6. 保存すると `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md` が更新される
+7. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
 
 ## Gemini 生成コマンド
 
@@ -110,5 +111,6 @@ LP は `docs/` 配下の静的ファイルとして管理しています。
 ## メモ
 
 - Tauri アプリは保存時に `today` をそのまま Markdown へ出さず、チェック済み項目だけを `done` に変換します。
+- 新しい日付を開くと、前日の未完了タスクだけを `today` に引き継ぎます。
 - Python CLI は既存の日報 Markdown を読み込み、Gemini で成果や自己評価を生成します。
 - `uv.lock` をコミットしているため、Gemini 生成の Python 環境は固定できます。

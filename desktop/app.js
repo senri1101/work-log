@@ -25,6 +25,8 @@ const elements = {
   preview: document.querySelector("#preview"),
   status: document.querySelector("#status"),
   workspacePath: document.querySelector("#workspacePath"),
+  workspacePathInput: document.querySelector("#workspacePathInput"),
+  workspaceSaveButton: document.querySelector("#workspaceSaveButton"),
   sidebarToggleButton: document.querySelector("#sidebarToggleButton"),
   sidebarToggleIcon: document.querySelector(".sidebar-toggle-icon"),
   sidebarReopenButton: document.querySelector("#sidebarReopenButton"),
@@ -64,6 +66,27 @@ function linesFromTextarea(value) {
 function setStatus(message, kind = "") {
   elements.status.textContent = message;
   elements.status.className = `status${kind ? ` ${kind}` : ""}`;
+}
+
+function setWorkspaceUi(configured, workspacePath = "") {
+  state.workspacePath = workspacePath;
+  elements.workspacePath.textContent = configured ? workspacePath : "未設定";
+  elements.workspacePathInput.value = workspacePath;
+  [
+    elements.entryDate,
+    elements.reloadButton,
+    elements.saveButton,
+    elements.pushButton,
+    elements.gitStatusButton,
+    elements.addTodayItemButton,
+    elements.commitMessage,
+    elements.supportInput,
+    elements.improvementsInput,
+    elements.learningInput,
+    elements.notesInput,
+  ].forEach((element) => {
+    element.disabled = !configured;
+  });
 }
 
 function defaultCommitMessage(date) {
@@ -195,9 +218,8 @@ async function loadEntry(date) {
   setStatus("読み込み中です...");
   try {
     const payload = await invoke("load_entry", { date });
-    state.workspacePath = payload.workspacePath;
+    setWorkspaceUi(true, payload.workspacePath);
     state.entry = payload.entry || emptyEntry(date);
-    elements.workspacePath.textContent = state.workspacePath;
     elements.entryDate.value = state.entry.date;
     elements.commitMessage.value = defaultCommitMessage(state.entry.date);
     syncInputsFromEntry();
@@ -219,8 +241,7 @@ async function saveEntry() {
   setStatus("保存しています...");
   try {
     const result = await invoke("save_entry", { entry: state.entry });
-    state.workspacePath = result.workspacePath;
-    elements.workspacePath.textContent = result.workspacePath;
+    setWorkspaceUi(true, result.workspacePath);
     state.entry.markdownPreview = result.markdown;
     elements.preview.textContent = result.markdown;
     await refreshGitStatus();
@@ -229,6 +250,32 @@ async function saveEntry() {
   } catch (error) {
     setStatus(`保存できませんでした: ${error}`, "error");
     return false;
+  }
+}
+
+async function loadWorkspaceSettings() {
+  try {
+    const result = await invoke("get_workspace_settings");
+    setWorkspaceUi(result.configured, result.workspacePath);
+    return result.configured;
+  } catch (error) {
+    setWorkspaceUi(false);
+    setStatus(`保存先を読めませんでした: ${error}`, "error");
+    return false;
+  }
+}
+
+async function saveWorkspaceSettings() {
+  setStatus("保存先を更新しています...");
+  try {
+    const result = await invoke("set_workspace_path", {
+      workspacePath: elements.workspacePathInput.value,
+    });
+    setWorkspaceUi(result.configured, result.workspacePath);
+    await loadEntry(elements.entryDate.value || todayIso());
+    setStatus("保存先を更新しました。", "success");
+  } catch (error) {
+    setStatus(`保存先を更新できませんでした: ${error}`, "error");
   }
 }
 
@@ -262,6 +309,7 @@ async function saveAndPush() {
 }
 
 function bindEvents() {
+  elements.workspaceSaveButton.addEventListener("click", saveWorkspaceSettings);
   elements.sidebarToggleButton.addEventListener("click", toggleSidebar);
   elements.sidebarReopenButton.addEventListener("click", toggleSidebar);
   elements.entryDate.addEventListener("change", () => {
@@ -299,5 +347,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   bindEvents();
   const date = todayIso();
   elements.entryDate.value = date;
-  await loadEntry(date);
+  const configured = await loadWorkspaceSettings();
+  if (configured) {
+    await loadEntry(date);
+  } else {
+    state.entry = emptyEntry(date);
+    syncInputsFromEntry();
+    elements.preview.textContent = state.entry.markdownPreview;
+    setStatus("保存先を設定してください。", "error");
+  }
 });

@@ -106,6 +106,13 @@ textarea {
   color: var(--muted);
 }
 
+.field-label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .meta-value,
 .meta-note {
   margin: 0;
@@ -155,6 +162,7 @@ textarea {
 input[type="date"],
 textarea,
 .git-form input[type="text"],
+.workspace-input,
 .today-input,
 .impact-input {
   width: 100%;
@@ -165,9 +173,15 @@ textarea,
 }
 
 input[type="date"],
-.git-form input[type="text"] {
+.git-form input[type="text"],
+.workspace-input {
   padding: 11px 13px;
   min-width: 220px;
+}
+
+.workspace-save-button {
+  width: 100%;
+  margin-top: 10px;
 }
 
 textarea {

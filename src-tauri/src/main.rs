@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +33,19 @@ struct LoadEntryResponse {
     entry: Option<EntryPayload>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct AppSettings {
+    workspace_path: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WorkspaceSettingsResponse {
+    workspace_path: String,
+    configured: bool,
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SaveEntryResponse {
@@ -55,8 +69,34 @@ struct GitPushResponse {
 }
 
 #[tauri::command]
-fn load_entry(date: String) -> Result<LoadEntryResponse, String> {
-    let workspace = workspace_root()?;
+fn get_workspace_settings(app: AppHandle) -> Result<WorkspaceSettingsResponse, String> {
+    let settings = load_settings(&app)?;
+    let workspace_path = settings.workspace_path.unwrap_or_default();
+    Ok(WorkspaceSettingsResponse {
+        configured: !workspace_path.is_empty(),
+        workspace_path,
+    })
+}
+
+#[tauri::command]
+fn set_workspace_path(app: AppHandle, workspace_path: String) -> Result<WorkspaceSettingsResponse, String> {
+    let normalized = normalize_workspace_path(&workspace_path)?;
+    initialize_workspace(&normalized)?;
+    save_settings(
+        &app,
+        &AppSettings {
+            workspace_path: Some(normalized.display().to_string()),
+        },
+    )?;
+    Ok(WorkspaceSettingsResponse {
+        configured: true,
+        workspace_path: normalized.display().to_string(),
+    })
+}
+
+#[tauri::command]
+fn load_entry(app: AppHandle, date: String) -> Result<LoadEntryResponse, String> {
+    let workspace = workspace_root(&app)?;
     let state_path = entry_state_path(&workspace, &date);
 
     if !state_path.exists() {
@@ -85,8 +125,8 @@ fn render_markdown(entry: EntryPayload) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn save_entry(entry: EntryPayload) -> Result<SaveEntryResponse, String> {
-    let workspace = workspace_root()?;
+fn save_entry(app: AppHandle, entry: EntryPayload) -> Result<SaveEntryResponse, String> {
+    let workspace = workspace_root(&app)?;
     let state_path = entry_state_path(&workspace, &entry.date);
     let markdown_path = markdown_output_path(&workspace, &entry.date)?;
     let normalized = normalize_entry(entry);
@@ -115,8 +155,8 @@ fn save_entry(entry: EntryPayload) -> Result<SaveEntryResponse, String> {
 }
 
 #[tauri::command]
-fn git_status() -> Result<GitStatusResponse, String> {
-    let workspace = workspace_root()?;
+fn git_status(app: AppHandle) -> Result<GitStatusResponse, String> {
+    let workspace = workspace_root(&app)?;
     let branch = run_git_command(&workspace, &["status", "--short", "--branch"])?;
     let remote = run_git_command(&workspace, &["remote", "-v"])?;
     Ok(GitStatusResponse {
@@ -125,8 +165,8 @@ fn git_status() -> Result<GitStatusResponse, String> {
 }
 
 #[tauri::command]
-fn git_commit_and_push(commit_message: String) -> Result<GitPushResponse, String> {
-    let workspace = workspace_root()?;
+fn git_commit_and_push(app: AppHandle, commit_message: String) -> Result<GitPushResponse, String> {
+    let workspace = workspace_root(&app)?;
     let status_before = run_git_command(&workspace, &["status", "--short"])?;
 
     if !status_before.trim().is_empty() {
@@ -316,12 +356,73 @@ fn push_section(sections: &mut Vec<String>, heading: &str, items: &[String]) {
     sections.push(lines.join("\n"));
 }
 
-fn workspace_root() -> Result<PathBuf, String> {
-    let src_tauri_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    src_tauri_dir
-        .parent()
-        .map(Path::to_path_buf)
-        .ok_or_else(|| "ワークスペースのパス解決に失敗しました。".to_string())
+fn workspace_root(app: &AppHandle) -> Result<PathBuf, String> {
+    let settings = load_settings(app)?;
+    let raw = settings
+        .workspace_path
+        .ok_or_else(|| "保存先を設定してください。".to_string())?;
+    normalize_workspace_path(&raw)
+}
+
+fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|err| format!("設定ディレクトリの取得に失敗しました: {err}"))?;
+    Ok(dir.join("settings.json"))
+}
+
+fn load_settings(app: &AppHandle) -> Result<AppSettings, String> {
+    let path = settings_path(app)?;
+    if !path.exists() {
+        return Ok(AppSettings::default());
+    }
+    let content = fs::read_to_string(&path)
+        .map_err(|err| format!("設定の読み込みに失敗しました: {err}"))?;
+    serde_json::from_str(&content).map_err(|err| format!("設定の解析に失敗しました: {err}"))
+}
+
+fn save_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), String> {
+    let path = settings_path(app)?;
+    ensure_parent(&path)?;
+    let content = serde_json::to_string_pretty(settings)
+        .map_err(|err| format!("設定の変換に失敗しました: {err}"))?;
+    fs::write(&path, content).map_err(|err| format!("設定の保存に失敗しました: {err}"))
+}
+
+fn normalize_workspace_path(path: &str) -> Result<PathBuf, String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        return Err("保存先のパスを入力してください。".to_string());
+    }
+    let expanded = if let Some(stripped) = trimmed.strip_prefix("~/") {
+        let home = std::env::var("HOME").map_err(|_| "ホームディレクトリを取得できませんでした。".to_string())?;
+        PathBuf::from(home).join(stripped)
+    } else {
+        PathBuf::from(trimmed)
+    };
+    if !expanded.exists() {
+        return Err(format!("保存先が見つかりません: {}", expanded.display()));
+    }
+    if !expanded.is_dir() {
+        return Err(format!("保存先はフォルダを指定してください: {}", expanded.display()));
+    }
+    expanded
+        .canonicalize()
+        .map_err(|err| format!("保存先の解決に失敗しました: {err}"))
+}
+
+fn initialize_workspace(workspace: &Path) -> Result<(), String> {
+    for name in ["daily", "achievements", "reviews", "weekly", "tech-notes", ".work-log-state"] {
+        fs::create_dir_all(workspace.join(name))
+            .map_err(|err| format!("保存先の初期化に失敗しました ({}): {err}", workspace.join(name).display()))?;
+    }
+    let ignore_path = workspace.join(".work-log-state").join(".gitignore");
+    if !ignore_path.exists() {
+        fs::write(&ignore_path, "*\n!.gitignore\n")
+            .map_err(|err| format!(".gitignore の作成に失敗しました: {err}"))?;
+    }
+    Ok(())
 }
 
 fn entry_state_path(workspace: &Path, date: &str) -> PathBuf {
@@ -386,6 +487,8 @@ fn run_git_command(workspace: &Path, args: &[&str]) -> Result<String, String> {
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            get_workspace_settings,
+            set_workspace_path,
             load_entry,
             render_markdown,
             save_entry,

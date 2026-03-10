@@ -24,6 +24,16 @@
         <p class="lead">その日に残したいことを、見返しやすい形に整えます。</p>
         <div class="meta-card">
           <p class="meta-label">保存先</p>
+          <label class="field-label" for="workspacePathInput">ログ用 repo のパス</label>
+          <input
+            id="workspacePathInput"
+            class="workspace-input"
+            type="text"
+            placeholder="~/Repositories/work-log-data"
+          />
+          <button id="workspaceSaveButton" class="ghost workspace-save-button" type="button">
+            保存先を更新
+          </button>
           <p id="workspacePath" class="meta-value"></p>
           <p class="meta-note">日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。</p>
         </div>
