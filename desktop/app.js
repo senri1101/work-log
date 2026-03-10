@@ -31,7 +31,7 @@ function todayIso() {
 }
 
 function defaultTodayItem() {
-  return { task: "", checked: false, impact: "" };
+  return { task: "", checked: false, mustDo: false, impact: "" };
 }
 
 function emptyEntry(date) {
@@ -66,7 +66,7 @@ function renderTodayItems() {
   elements.todayItems.innerHTML = "";
   state.entry.today.forEach((item, index) => {
     const row = document.createElement("div");
-    row.className = `today-row${item.checked ? " done" : ""}`;
+    row.className = `today-row${item.checked ? " done" : ""}${item.mustDo ? " must-do" : ""}`;
 
     const checkboxWrap = document.createElement("label");
     checkboxWrap.className = "checkbox-wrap";
@@ -79,6 +79,17 @@ function renderTodayItems() {
       refreshPreview();
     });
     checkboxWrap.appendChild(checkbox);
+
+    const mustDoButton = document.createElement("button");
+    mustDoButton.type = "button";
+    mustDoButton.className = `must-do-button${item.mustDo ? " active" : ""}`;
+    mustDoButton.textContent = "必達";
+    mustDoButton.setAttribute("aria-pressed", item.mustDo ? "true" : "false");
+    mustDoButton.addEventListener("click", () => {
+      item.mustDo = !item.mustDo;
+      renderTodayItems();
+      refreshPreview();
+    });
 
     const taskInput = document.createElement("textarea");
     taskInput.className = "today-input";
@@ -115,7 +126,7 @@ function renderTodayItems() {
       refreshPreview();
     });
 
-    row.append(checkboxWrap, taskInput, impactInput, removeButton);
+    row.append(checkboxWrap, mustDoButton, taskInput, impactInput, removeButton);
     elements.todayItems.appendChild(row);
   });
 }

@@ -8,6 +8,8 @@ use std::process::Command;
 struct TodayItem {
     task: String,
     checked: bool,
+    #[serde(default)]
+    must_do: bool,
     impact: String,
 }
 
@@ -162,6 +164,7 @@ fn normalize_entry(mut entry: EntryPayload) -> EntryPayload {
         .map(|item| TodayItem {
             task: item.task.trim().to_string(),
             checked: item.checked,
+            must_do: item.must_do,
             impact: item.impact.trim().to_string(),
         })
         .collect();
@@ -191,7 +194,12 @@ fn render_markdown_text(entry: &EntryPayload) -> String {
     if !done_items.is_empty() {
         let mut lines = vec!["## done".to_string()];
         for item in done_items {
-            lines.push(format!("- task: {}", item.task.trim()));
+            let task = if item.must_do {
+                format!("[必達] {}", item.task.trim())
+            } else {
+                item.task.trim().to_string()
+            };
+            lines.push(format!("- task: {task}"));
             if !item.impact.trim().is_empty() {
                 lines.push(format!("  impact: {}", item.impact.trim()));
             }

@@ -266,7 +266,7 @@ button.ghost:hover {
 
 .today-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 0.8fr) 56px;
+  grid-template-columns: 28px 64px minmax(0, 1fr) minmax(0, 0.8fr) 56px;
   gap: 12px;
   align-items: start;
   padding: 12px;
@@ -280,6 +280,10 @@ button.ghost:hover {
   border-color: rgba(54, 93, 85, 0.14);
 }
 
+.today-row.must-do {
+  border-color: rgba(199, 116, 69, 0.2);
+}
+
 .checkbox-wrap {
   display: flex;
   justify-content: center;
@@ -290,6 +294,22 @@ button.ghost:hover {
   width: 16px;
   height: 16px;
   accent-color: var(--primary);
+}
+
+.must-do-button {
+  align-self: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(199, 116, 69, 0.18);
+  background: rgba(255, 249, 243, 0.9);
+  color: #8a5a3c;
+  font-size: 12px;
+}
+
+.must-do-button.active {
+  background: rgba(199, 116, 69, 0.12);
+  border-color: rgba(199, 116, 69, 0.34);
+  color: #7a4c32;
 }
 
 .today-input,
@@ -350,11 +370,11 @@ code {
   }
 
   .today-row {
-    grid-template-columns: 28px 1fr;
+    grid-template-columns: 28px 64px 1fr;
   }
 
   .remove-button {
-    grid-column: 2;
+    grid-column: 3;
     justify-self: end;
   }
 }
