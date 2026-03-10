@@ -1,0 +1,25 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#F6E9D4"/>
+  <rect x="44" y="44" width="1112" height="542" rx="40" fill="#FFF9F1" stroke="#E5CFAD"/>
+  <circle cx="1008" cy="152" r="216" fill="#EBCB9B"/>
+  <circle cx="152" cy="520" r="180" fill="#E9DCC6"/>
+  <rect x="96" y="96" width="90" height="90" rx="24" fill="#1F5B4D"/>
+  <text x="141" y="152" text-anchor="middle" fill="white" font-size="34" font-family="Hiragino Sans, Yu Gothic, sans-serif" font-weight="700">WL</text>
+  <text x="96" y="254" fill="#1E1712" font-size="68" font-family="Hiragino Sans, Yu Gothic, sans-serif" font-weight="700">
+    <tspan x="96" dy="0">日報を、あとから効く</tspan>
+    <tspan x="96" dy="86">キャリア資産にする。</tspan>
+  </text>
+  <text x="100" y="414" fill="#5F5247" font-size="28" font-family="Hiragino Sans, Yu Gothic, sans-serif">
+    <tspan x="100" dy="0">work-log は、チェック付きの日報を Markdown と GitHub に蓄積し、</tspan>
+    <tspan x="100" dy="42">実績整理や自己評価に変換できる macOS アプリです。</tspan>
+  </text>
+  <rect x="96" y="486" width="280" height="64" rx="999" fill="#1F5B4D"/>
+  <text x="236" y="527" text-anchor="middle" fill="white" font-size="26" font-family="Hiragino Sans, Yu Gothic, sans-serif" font-weight="700">Tauri + GitHub</text>
+  <rect x="730" y="212" width="324" height="214" rx="28" fill="#201A17"/>
+  <text x="762" y="270" fill="#F6E0B6" font-size="24" font-family="SFMono-Regular, Menlo, monospace"># 2026-03-10</text>
+  <text x="762" y="322" fill="#F6E0B6" font-size="24" font-family="SFMono-Regular, Menlo, monospace">## done</text>
+  <text x="762" y="366" fill="#F6E0B6" font-size="24" font-family="SFMono-Regular, Menlo, monospace">- task: 設定画面修正</text>
+  <text x="762" y="402" fill="#F6E0B6" font-size="22" font-family="SFMono-Regular, Menlo, monospace">  impact: UX改善</text>
+  <rect x="730" y="448" width="216" height="54" rx="999" fill="#C86D30"/>
+  <text x="838" y="482" text-anchor="middle" fill="white" font-size="22" font-family="Hiragino Sans, Yu Gothic, sans-serif" font-weight="700">commit / push</text>
+</svg>
