@@ -184,6 +184,21 @@ input[type="date"],
   margin-top: 10px;
 }
 
+.setting-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.setting-check input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+}
+
 textarea {
   resize: vertical;
   min-height: 132px;

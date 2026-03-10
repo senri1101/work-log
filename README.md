@@ -80,6 +80,7 @@ uv run python -m unittest discover -s tests -v
 5. 初回は左側でログ用 repo のパスを設定する
 6. 保存すると `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md` が更新される
 7. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
+8. 左側で `保存時に commit` / `保存時に push` を設定すると自動化できる
 
 ## Gemini 生成コマンド
 
@@ -112,5 +113,6 @@ LP は `docs/` 配下の静的ファイルとして管理しています。
 
 - Tauri アプリは保存時に `today` をそのまま Markdown へ出さず、チェック済み項目だけを `done` に変換します。
 - 新しい日付を開くと、前日の未完了タスクだけを `today` に引き継ぎます。
+- `保存時に push` を ON にすると、保存時に commit も自動で有効になります。
 - Python CLI は既存の日報 Markdown を読み込み、Gemini で成果や自己評価を生成します。
 - `uv.lock` をコミットしているため、Gemini 生成の Python 環境は固定できます。

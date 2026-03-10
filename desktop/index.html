@@ -34,6 +34,14 @@
           <button id="workspaceSaveButton" class="ghost workspace-save-button" type="button">
             保存先を更新
           </button>
+          <label class="setting-check">
+            <input id="autoCommitToggle" type="checkbox" />
+            <span>保存時に commit</span>
+          </label>
+          <label class="setting-check">
+            <input id="autoPushToggle" type="checkbox" />
+            <span>保存時に push</span>
+          </label>
           <p id="workspacePath" class="meta-value"></p>
           <p class="meta-note">日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。</p>
         </div>

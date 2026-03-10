@@ -4,6 +4,8 @@ const state = {
   workspacePath: "",
   entry: null,
   sidebarCollapsed: false,
+  autoCommitOnSave: false,
+  autoPushOnSave: false,
 };
 
 const elements = {
@@ -27,6 +29,8 @@ const elements = {
   workspacePath: document.querySelector("#workspacePath"),
   workspacePathInput: document.querySelector("#workspacePathInput"),
   workspaceSaveButton: document.querySelector("#workspaceSaveButton"),
+  autoCommitToggle: document.querySelector("#autoCommitToggle"),
+  autoPushToggle: document.querySelector("#autoPushToggle"),
   sidebarToggleButton: document.querySelector("#sidebarToggleButton"),
   sidebarToggleIcon: document.querySelector(".sidebar-toggle-icon"),
   sidebarReopenButton: document.querySelector("#sidebarReopenButton"),
@@ -68,10 +72,19 @@ function setStatus(message, kind = "") {
   elements.status.className = `status${kind ? ` ${kind}` : ""}`;
 }
 
-function setWorkspaceUi(configured, workspacePath = "") {
+function setWorkspaceUi(
+  configured,
+  workspacePath = "",
+  autoCommitOnSave = false,
+  autoPushOnSave = false,
+) {
   state.workspacePath = workspacePath;
+  state.autoCommitOnSave = autoCommitOnSave;
+  state.autoPushOnSave = autoPushOnSave;
   elements.workspacePath.textContent = configured ? workspacePath : "未設定";
   elements.workspacePathInput.value = workspacePath;
+  elements.autoCommitToggle.checked = autoCommitOnSave;
+  elements.autoPushToggle.checked = autoPushOnSave;
   [
     elements.entryDate,
     elements.reloadButton,
@@ -87,6 +100,8 @@ function setWorkspaceUi(configured, workspacePath = "") {
   ].forEach((element) => {
     element.disabled = !configured;
   });
+  elements.autoCommitToggle.disabled = !configured;
+  elements.autoPushToggle.disabled = !configured;
 }
 
 function defaultCommitMessage(date) {
@@ -218,7 +233,7 @@ async function loadEntry(date) {
   setStatus("読み込み中です...");
   try {
     const payload = await invoke("load_entry", { date });
-    setWorkspaceUi(true, payload.workspacePath);
+    setWorkspaceUi(true, payload.workspacePath, state.autoCommitOnSave, state.autoPushOnSave);
     state.entry = payload.entry || emptyEntry(date);
     elements.entryDate.value = state.entry.date;
     elements.commitMessage.value = defaultCommitMessage(state.entry.date);
@@ -241,11 +256,21 @@ async function saveEntry() {
   setStatus("保存しています...");
   try {
     const result = await invoke("save_entry", { entry: state.entry });
-    setWorkspaceUi(true, result.workspacePath);
+    setWorkspaceUi(true, result.workspacePath, state.autoCommitOnSave, state.autoPushOnSave);
     state.entry.markdownPreview = result.markdown;
     elements.preview.textContent = result.markdown;
-    await refreshGitStatus();
-    setStatus("保存しました。", "success");
+    if (state.autoCommitOnSave) {
+      const syncResult = await invoke("git_commit_changes", {
+        commitMessage:
+          elements.commitMessage.value.trim() || defaultCommitMessage(state.entry.date),
+        push: state.autoPushOnSave,
+      });
+      elements.gitStatusOutput.textContent = syncResult.statusText;
+      setStatus(syncResult.summary, "success");
+    } else {
+      await refreshGitStatus();
+      setStatus("保存しました。", "success");
+    }
     return true;
   } catch (error) {
     setStatus(`保存できませんでした: ${error}`, "error");
@@ -256,7 +281,12 @@ async function saveEntry() {
 async function loadWorkspaceSettings() {
   try {
     const result = await invoke("get_workspace_settings");
-    setWorkspaceUi(result.configured, result.workspacePath);
+    setWorkspaceUi(
+      result.configured,
+      result.workspacePath,
+      result.autoCommitOnSave,
+      result.autoPushOnSave,
+    );
     return result.configured;
   } catch (error) {
     setWorkspaceUi(false);
@@ -268,10 +298,17 @@ async function loadWorkspaceSettings() {
 async function saveWorkspaceSettings() {
   setStatus("保存先を更新しています...");
   try {
-    const result = await invoke("set_workspace_path", {
+    const result = await invoke("save_app_settings", {
       workspacePath: elements.workspacePathInput.value,
+      autoCommitOnSave: elements.autoCommitToggle.checked,
+      autoPushOnSave: elements.autoPushToggle.checked,
     });
-    setWorkspaceUi(result.configured, result.workspacePath);
+    setWorkspaceUi(
+      result.configured,
+      result.workspacePath,
+      result.autoCommitOnSave,
+      result.autoPushOnSave,
+    );
     await loadEntry(elements.entryDate.value || todayIso());
     setStatus("保存先を更新しました。", "success");
   } catch (error) {
@@ -294,11 +331,16 @@ async function saveAndPush() {
     return;
   }
 
+  if (state.autoPushOnSave) {
+    return;
+  }
+
   setStatus("反映しています...");
   try {
-    const result = await invoke("git_commit_and_push", {
+    const result = await invoke("git_commit_changes", {
       commitMessage:
         elements.commitMessage.value.trim() || defaultCommitMessage(state.entry.date),
+      push: true,
     });
     elements.gitStatusOutput.textContent = result.statusText;
     setStatus(result.summary, "success");
@@ -310,6 +352,18 @@ async function saveAndPush() {
 
 function bindEvents() {
   elements.workspaceSaveButton.addEventListener("click", saveWorkspaceSettings);
+  elements.autoCommitToggle.addEventListener("change", () => {
+    if (!elements.autoCommitToggle.checked) {
+      elements.autoPushToggle.checked = false;
+    }
+    saveWorkspaceSettings();
+  });
+  elements.autoPushToggle.addEventListener("change", () => {
+    if (elements.autoPushToggle.checked) {
+      elements.autoCommitToggle.checked = true;
+    }
+    saveWorkspaceSettings();
+  });
   elements.sidebarToggleButton.addEventListener("click", toggleSidebar);
   elements.sidebarReopenButton.addEventListener("click", toggleSidebar);
   elements.entryDate.addEventListener("change", () => {

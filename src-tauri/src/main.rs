@@ -37,6 +37,10 @@ struct LoadEntryResponse {
 #[serde(rename_all = "camelCase")]
 struct AppSettings {
     workspace_path: Option<String>,
+    #[serde(default)]
+    auto_commit_on_save: bool,
+    #[serde(default)]
+    auto_push_on_save: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -44,6 +48,8 @@ struct AppSettings {
 struct WorkspaceSettingsResponse {
     workspace_path: String,
     configured: bool,
+    auto_commit_on_save: bool,
+    auto_push_on_save: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -75,22 +81,33 @@ fn get_workspace_settings(app: AppHandle) -> Result<WorkspaceSettingsResponse, S
     Ok(WorkspaceSettingsResponse {
         configured: !workspace_path.is_empty(),
         workspace_path,
+        auto_commit_on_save: settings.auto_commit_on_save,
+        auto_push_on_save: settings.auto_push_on_save,
     })
 }
 
 #[tauri::command]
-fn set_workspace_path(app: AppHandle, workspace_path: String) -> Result<WorkspaceSettingsResponse, String> {
+fn save_app_settings(
+    app: AppHandle,
+    workspace_path: String,
+    auto_commit_on_save: bool,
+    auto_push_on_save: bool,
+) -> Result<WorkspaceSettingsResponse, String> {
     let normalized = normalize_workspace_path(&workspace_path)?;
     initialize_workspace(&normalized)?;
     save_settings(
         &app,
         &AppSettings {
             workspace_path: Some(normalized.display().to_string()),
+            auto_commit_on_save: auto_commit_on_save || auto_push_on_save,
+            auto_push_on_save,
         },
     )?;
     Ok(WorkspaceSettingsResponse {
         configured: true,
         workspace_path: normalized.display().to_string(),
+        auto_commit_on_save: auto_commit_on_save || auto_push_on_save,
+        auto_push_on_save,
     })
 }
 
@@ -165,35 +182,18 @@ fn git_status(app: AppHandle) -> Result<GitStatusResponse, String> {
 }
 
 #[tauri::command]
-fn git_commit_and_push(app: AppHandle, commit_message: String) -> Result<GitPushResponse, String> {
+fn git_commit_changes(app: AppHandle, commit_message: String, push: bool) -> Result<GitPushResponse, String> {
     let workspace = workspace_root(&app)?;
-    let status_before = run_git_command(&workspace, &["status", "--short"])?;
-
-    if !status_before.trim().is_empty() {
-        run_git_command(
-            &workspace,
-            &[
-                "add",
-                "daily",
-                "achievements",
-                "reviews",
-                "weekly",
-                "tech-notes",
-            ],
-        )?;
-
-        let staged = run_git_command(&workspace, &["diff", "--cached", "--name-only"])?;
-        if !staged.trim().is_empty() {
-            run_git_command(&workspace, &["commit", "-m", commit_message.trim()])?;
-        }
-    }
-
-    let push_output = run_git_command(&workspace, &["push", "origin", "main"])?;
+    let push_output = sync_git_changes(&workspace, commit_message.trim(), push)?;
     let status_after = run_git_command(&workspace, &["status", "--short", "--branch"])?;
 
     Ok(GitPushResponse {
         status_text: format!("{status_after}\n\n{push_output}").trim().to_string(),
-        summary: "反映しました。".to_string(),
+        summary: if push {
+            "反映しました。".to_string()
+        } else {
+            "commit しました。".to_string()
+        },
     })
 }
 
@@ -425,6 +425,35 @@ fn initialize_workspace(workspace: &Path) -> Result<(), String> {
     Ok(())
 }
 
+fn sync_git_changes(workspace: &Path, commit_message: &str, push: bool) -> Result<String, String> {
+    let status_before = run_git_command(workspace, &["status", "--short"])?;
+
+    if !status_before.trim().is_empty() {
+        run_git_command(
+            workspace,
+            &[
+                "add",
+                "daily",
+                "achievements",
+                "reviews",
+                "weekly",
+                "tech-notes",
+            ],
+        )?;
+
+        let staged = run_git_command(workspace, &["diff", "--cached", "--name-only"])?;
+        if !staged.trim().is_empty() {
+            run_git_command(workspace, &["commit", "-m", commit_message])?;
+        }
+    }
+
+    if push {
+        run_git_command(workspace, &["push", "origin", "main"])
+    } else {
+        Ok("".to_string())
+    }
+}
+
 fn entry_state_path(workspace: &Path, date: &str) -> PathBuf {
     let year = year_from_date(date).unwrap_or_else(|_| "unknown".to_string());
     workspace
@@ -488,12 +517,12 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_workspace_settings,
-            set_workspace_path,
+            save_app_settings,
             load_entry,
             render_markdown,
             save_entry,
             git_status,
-            git_commit_and_push
+            git_commit_changes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
