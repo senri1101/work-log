@@ -146,8 +146,10 @@ function renderTodayItems() {
 
     const removeButton = document.createElement("button");
     removeButton.type = "button";
-    removeButton.className = "remove-button";
-    removeButton.textContent = "削除";
+    removeButton.className = "remove-button icon-button";
+    removeButton.textContent = "−";
+    removeButton.setAttribute("aria-label", "項目を削除");
+    removeButton.title = "項目を削除";
     removeButton.disabled = state.entry.today.length === 1;
     removeButton.addEventListener("click", () => {
       state.entry.today.splice(index, 1);

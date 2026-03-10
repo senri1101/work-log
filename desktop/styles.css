@@ -224,6 +224,12 @@ button.ghost:hover {
   min-width: 42px;
 }
 
+.icon-button span,
+.remove-button {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .sidebar-toggle {
   position: absolute;
   top: 18px;
@@ -248,9 +254,18 @@ button.ghost:hover {
 
 .remove-button {
   align-self: center;
+  justify-self: end;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
   background: transparent;
   color: var(--danger);
   border: 1px solid rgba(138, 90, 86, 0.22);
+}
+
+.remove-button:hover {
+  background: rgba(138, 90, 86, 0.06);
 }
 
 .status {
