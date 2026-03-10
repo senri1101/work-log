@@ -59,8 +59,8 @@ Git に残すのは `daily/` 以下の Markdown が中心です。
 
 ```bash
 cd /Users/senri.gotoda/Desktop/Repositories/work-log
-npm install
-npm run tauri dev
+pnpm install
+pnpm tauri dev
 ```
 
 ### 2. Gemini 生成を使う
