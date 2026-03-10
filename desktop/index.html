@@ -68,52 +68,44 @@
           <div class="panel-head">
             <div>
               <p class="panel-title">today</p>
-              <p class="panel-copy">必達も付けられます。終わったものだけ残ります。</p>
+              <p class="panel-copy">終わったものはその日に残り、翌日は未完了だけ引き継ぎます。</p>
             </div>
             <button id="addTodayItemButton" class="ghost">追加</button>
           </div>
           <div id="todayItems" class="today-list"></div>
         </section>
 
-        <section class="grid">
-          <section class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="panel-title">support</p>
-                <p class="panel-copy">手伝ったこと。</p>
-              </div>
+        <section class="panel details-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-title">details</p>
+              <p class="panel-copy">必要なものだけ書きます。</p>
             </div>
-            <textarea id="supportInput" rows="7"></textarea>
-          </section>
+          </div>
+          <section class="details-grid">
+            <div class="field-block">
+              <label class="field-title" for="supportInput">support</label>
+              <p class="field-copy">手伝ったこと。</p>
+              <textarea id="supportInput" rows="6"></textarea>
+            </div>
 
-          <section class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="panel-title">improvements</p>
-                <p class="panel-copy">次に試すこと。</p>
-              </div>
+            <div class="field-block">
+              <label class="field-title" for="improvementsInput">improvements</label>
+              <p class="field-copy">次に試すこと。</p>
+              <textarea id="improvementsInput" rows="6"></textarea>
             </div>
-            <textarea id="improvementsInput" rows="7"></textarea>
-          </section>
 
-          <section class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="panel-title">learning</p>
-                <p class="panel-copy">気づきがあれば。</p>
-              </div>
+            <div class="field-block">
+              <label class="field-title" for="learningInput">learning</label>
+              <p class="field-copy">気づきがあれば。</p>
+              <textarea id="learningInput" rows="5"></textarea>
             </div>
-            <textarea id="learningInput" rows="7"></textarea>
-          </section>
 
-          <section class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="panel-title">notes</p>
-                <p class="panel-copy">短いメモ。</p>
-              </div>
+            <div class="field-block">
+              <label class="field-title" for="notesInput">notes</label>
+              <p class="field-copy">短いメモ。</p>
+              <textarea id="notesInput" rows="5"></textarea>
             </div>
-            <textarea id="notesInput" rows="7"></textarea>
           </section>
         </section>
 

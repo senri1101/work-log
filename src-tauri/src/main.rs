@@ -60,9 +60,10 @@ fn load_entry(date: String) -> Result<LoadEntryResponse, String> {
     let state_path = entry_state_path(&workspace, &date);
 
     if !state_path.exists() {
+        let carry_over = carry_over_entry(&workspace, &date)?;
         return Ok(LoadEntryResponse {
             workspace_path: workspace.display().to_string(),
-            entry: None,
+            entry: carry_over,
         });
     }
 
@@ -217,6 +218,91 @@ fn render_markdown_text(entry: &EntryPayload) -> String {
     } else {
         format!("# {}\n\n{}\n", entry.date, sections.join("\n\n"))
     }
+}
+
+fn carry_over_entry(workspace: &Path, date: &str) -> Result<Option<EntryPayload>, String> {
+    let previous_date = previous_date_string(date)?;
+    let previous_state_path = entry_state_path(workspace, &previous_date);
+
+    if !previous_state_path.exists() {
+        return Ok(None);
+    }
+
+    let content = fs::read_to_string(&previous_state_path)
+        .map_err(|err| format!("前日の編集中データの読み込みに失敗しました: {err}"))?;
+    let previous_entry: EntryPayload = serde_json::from_str(&content)
+        .map_err(|err| format!("前日の編集中データの解析に失敗しました: {err}"))?;
+
+    let carried_today: Vec<TodayItem> = previous_entry
+        .today
+        .into_iter()
+        .filter(|item| !item.checked && !item.task.trim().is_empty())
+        .map(|item| TodayItem {
+            task: item.task.trim().to_string(),
+            checked: false,
+            must_do: item.must_do,
+            impact: String::new(),
+        })
+        .collect();
+
+    if carried_today.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(EntryPayload {
+        date: date.to_string(),
+        today: carried_today,
+        support: Vec::new(),
+        improvements: Vec::new(),
+        learning: Vec::new(),
+        notes: Vec::new(),
+        markdown_preview: format!("# {date}\n"),
+    }))
+}
+
+fn previous_date_string(date: &str) -> Result<String, String> {
+    let mut parts = date.split('-');
+    let mut year: i32 = parts
+        .next()
+        .ok_or_else(|| format!("日付形式が不正です: {date}"))?
+        .parse()
+        .map_err(|_| format!("日付形式が不正です: {date}"))?;
+    let mut month: i32 = parts
+        .next()
+        .ok_or_else(|| format!("日付形式が不正です: {date}"))?
+        .parse()
+        .map_err(|_| format!("日付形式が不正です: {date}"))?;
+    let mut day: i32 = parts
+        .next()
+        .ok_or_else(|| format!("日付形式が不正です: {date}"))?
+        .parse()
+        .map_err(|_| format!("日付形式が不正です: {date}"))?;
+
+    day -= 1;
+    if day == 0 {
+      month -= 1;
+      if month == 0 {
+          year -= 1;
+          month = 12;
+      }
+      day = days_in_month(year, month);
+    }
+
+    Ok(format!("{year:04}-{month:02}-{day:02}"))
+}
+
+fn days_in_month(year: i32, month: i32) -> i32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => 30,
+    }
+}
+
+fn is_leap_year(year: i32) -> bool {
+    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
 fn push_section(sections: &mut Vec<String>, heading: &str, items: &[String]) {
