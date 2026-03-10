@@ -3,9 +3,12 @@ const invoke = window.__TAURI__.core.invoke;
 const state = {
   workspacePath: "",
   entry: null,
+  sidebarCollapsed: false,
 };
 
 const elements = {
+  shell: document.querySelector(".shell"),
+  sidebar: document.querySelector("#sidebar"),
   entryDate: document.querySelector("#entryDate"),
   reloadButton: document.querySelector("#reloadButton"),
   saveButton: document.querySelector("#saveButton"),
@@ -22,7 +25,12 @@ const elements = {
   preview: document.querySelector("#preview"),
   status: document.querySelector("#status"),
   workspacePath: document.querySelector("#workspacePath"),
+  sidebarToggleButton: document.querySelector("#sidebarToggleButton"),
+  sidebarToggleIcon: document.querySelector(".sidebar-toggle-icon"),
+  sidebarReopenButton: document.querySelector("#sidebarReopenButton"),
 };
+
+const SIDEBAR_KEY = "work-log:sidebar-collapsed";
 
 function todayIso() {
   const now = new Date();
@@ -60,6 +68,30 @@ function setStatus(message, kind = "") {
 
 function defaultCommitMessage(date) {
   return `chore: daily log ${date}`;
+}
+
+function applySidebarState() {
+  elements.shell.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  elements.sidebarToggleButton.setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+  elements.sidebarToggleButton.setAttribute(
+    "aria-label",
+    state.sidebarCollapsed ? "サイドバーを開く" : "サイドバーを閉じる",
+  );
+  elements.sidebarToggleButton.title = state.sidebarCollapsed
+    ? "サイドバーを開く"
+    : "サイドバーを閉じる";
+  elements.sidebarToggleIcon.textContent = state.sidebarCollapsed ? "▸" : "◂";
+  elements.sidebarReopenButton.hidden = !state.sidebarCollapsed;
+}
+
+function setSidebarCollapsed(collapsed) {
+  state.sidebarCollapsed = collapsed;
+  localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+  applySidebarState();
+}
+
+function toggleSidebar() {
+  setSidebarCollapsed(!state.sidebarCollapsed);
 }
 
 function renderTodayItems() {
@@ -228,6 +260,8 @@ async function saveAndPush() {
 }
 
 function bindEvents() {
+  elements.sidebarToggleButton.addEventListener("click", toggleSidebar);
+  elements.sidebarReopenButton.addEventListener("click", toggleSidebar);
   elements.entryDate.addEventListener("change", () => {
     loadEntry(elements.entryDate.value);
   });
@@ -249,9 +283,17 @@ function bindEvents() {
   ].forEach((element) => {
     element.addEventListener("input", refreshPreview);
   });
+  window.addEventListener("keydown", (event) => {
+    if (event.metaKey && event.key === "\\") {
+      event.preventDefault();
+      toggleSidebar();
+    }
+  });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  state.sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
+  applySidebarState();
   bindEvents();
   const date = todayIso();
   elements.entryDate.value = date;

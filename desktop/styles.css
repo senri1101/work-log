@@ -40,14 +40,30 @@ textarea {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns 0.18s ease;
+}
+
+.shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
 }
 
 .sidebar {
+  position: relative;
   padding: 36px 24px;
   border-right: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)),
     var(--sidebar);
+  overflow: hidden;
+  transition: padding 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+}
+
+.shell.sidebar-collapsed .sidebar {
+  padding-left: 0;
+  padding-right: 0;
+  border-color: transparent;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -120,6 +136,12 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: end;
+  gap: 10px;
 }
 
 .topbar label,
@@ -195,6 +217,33 @@ button.ghost {
 button.ghost:hover {
   background: rgba(255, 255, 255, 0.95);
   border-color: var(--line-strong);
+}
+
+.icon-button {
+  padding: 10px 12px;
+  min-width: 42px;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: var(--line-strong);
+}
+
+.sidebar-toggle-icon {
+  font-size: 13px;
 }
 
 .remove-button {
@@ -360,9 +409,17 @@ code {
     grid-template-columns: 1fr;
   }
 
+  .shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
   .sidebar {
     border-right: none;
     border-bottom: 1px solid var(--line);
+  }
+
+  .shell.sidebar-collapsed .sidebar {
+    display: none;
   }
 
   .grid {

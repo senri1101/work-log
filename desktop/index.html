@@ -8,7 +8,17 @@
   </head>
   <body>
     <div class="shell">
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
+        <button
+          id="sidebarToggleButton"
+          class="sidebar-toggle"
+          type="button"
+          aria-label="サイドバーを閉じる"
+          aria-expanded="true"
+          title="サイドバーを閉じる"
+        >
+          <span class="sidebar-toggle-icon" aria-hidden="true">◂</span>
+        </button>
         <p class="eyebrow">Work Log</p>
         <h1>作業ログ</h1>
         <p class="lead">その日に残したいことを、見返しやすい形に整えます。</p>
@@ -29,9 +39,20 @@
 
       <main class="main">
         <section class="topbar">
-          <div>
-            <label for="entryDate">対象日</label>
-            <input id="entryDate" type="date" />
+          <div class="topbar-left">
+            <button
+              id="sidebarReopenButton"
+              class="icon-button ghost"
+              type="button"
+              aria-label="サイドバーを開く"
+              title="サイドバーを開く"
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
+            <div>
+              <label for="entryDate">対象日</label>
+              <input id="entryDate" type="date" />
+            </div>
           </div>
           <div class="toolbar">
             <button id="gitStatusButton" class="ghost">状態</button>
