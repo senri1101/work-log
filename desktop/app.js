@@ -177,7 +177,6 @@ function renderTodayItems() {
     impactInput.rows = 2;
     impactInput.placeholder = "影響や価値";
     impactInput.value = item.impact;
-    impactInput.disabled = !item.checked;
     impactInput.addEventListener("input", () => {
       item.impact = impactInput.value;
       refreshPreview();
