@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>work-log</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <p class="eyebrow">Work Log</p>
+        <h1>日報を資産化する</h1>
+        <p class="lead">
+          その日の作業を記録しつつ、残したい情報だけを Markdown に正規化します。
+        </p>
+        <div class="meta-card">
+          <p class="meta-label">保存先</p>
+          <p id="workspacePath" class="meta-value"></p>
+          <p class="meta-note">
+            日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。編集中の状態は
+            <code>.work-log-state</code> に保持します。
+          </p>
+        </div>
+        <div class="meta-card">
+          <p class="meta-label">使い方</p>
+          <ol class="steps">
+            <li>today に今日やることを追加</li>
+            <li>終わったらチェックを入れて impact を書く</li>
+            <li>保存するとチェック済みだけが done として出力</li>
+          </ol>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="topbar">
+          <div>
+            <label for="entryDate">対象日</label>
+            <input id="entryDate" type="date" />
+          </div>
+          <div class="toolbar">
+            <button id="reloadButton" class="ghost">再読み込み</button>
+            <button id="saveButton" class="primary">保存</button>
+          </div>
+        </section>
+
+        <div id="status" class="status" aria-live="polite"></div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-title">today</p>
+              <p class="panel-copy">チェックを入れたものだけ Markdown の done に反映します。</p>
+            </div>
+            <button id="addTodayItemButton" class="ghost">行を追加</button>
+          </div>
+          <div id="todayItems" class="today-list"></div>
+        </section>
+
+        <section class="grid">
+          <section class="panel">
+            <div class="panel-head compact">
+              <div>
+                <p class="panel-title">support</p>
+                <p class="panel-copy">1行に1項目で書いてください。</p>
+              </div>
+            </div>
+            <textarea id="supportInput" rows="7"></textarea>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head compact">
+              <div>
+                <p class="panel-title">improvements</p>
+                <p class="panel-copy">改善アイデアや次に試したいこと。</p>
+              </div>
+            </div>
+            <textarea id="improvementsInput" rows="7"></textarea>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head compact">
+              <div>
+                <p class="panel-title">learning</p>
+                <p class="panel-copy">学んだこと。任意です。</p>
+              </div>
+            </div>
+            <textarea id="learningInput" rows="7"></textarea>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head compact">
+              <div>
+                <p class="panel-title">notes</p>
+                <p class="panel-copy">メモや調査ログ。</p>
+              </div>
+            </div>
+            <textarea id="notesInput" rows="7"></textarea>
+          </section>
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-title">Markdown プレビュー</p>
+              <p class="panel-copy">保存内容のプレビューです。</p>
+            </div>
+          </div>
+          <pre id="preview" class="preview"></pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

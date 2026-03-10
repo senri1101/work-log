@@ -10,3 +10,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+node_modules/
+src-tauri/target/
+dist/
+.work-log-state/
