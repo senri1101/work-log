@@ -184,6 +184,13 @@ input[type="date"],
   margin-top: 10px;
 }
 
+.workspace-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .setting-check {
   display: flex;
   align-items: center;

@@ -77,7 +77,7 @@ uv run python -m unittest discover -s tests -v
 2. 完了したらチェックを入れる
 3. 必要なら `impact` を書く
 4. `support`, `improvements`, `learning`, `notes` を追記する
-5. 初回は左側でログ用 repo のパスを設定する
+5. 初回は左側で `選ぶ` からログ用 repo のパスを設定する
 6. 保存すると `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md` が更新される
 7. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
 8. 左側で `保存時に commit` / `保存時に push` を設定すると自動化できる

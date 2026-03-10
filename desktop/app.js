@@ -28,6 +28,7 @@ const elements = {
   status: document.querySelector("#status"),
   workspacePath: document.querySelector("#workspacePath"),
   workspacePathInput: document.querySelector("#workspacePathInput"),
+  workspaceBrowseButton: document.querySelector("#workspaceBrowseButton"),
   workspaceSaveButton: document.querySelector("#workspaceSaveButton"),
   autoCommitToggle: document.querySelector("#autoCommitToggle"),
   autoPushToggle: document.querySelector("#autoPushToggle"),
@@ -316,6 +317,20 @@ async function saveWorkspaceSettings() {
   }
 }
 
+async function browseWorkspacePath() {
+  try {
+    const selectedPath = await invoke("pick_workspace_path");
+    if (selectedPath) {
+      elements.workspacePathInput.value = selectedPath;
+    }
+  } catch (error) {
+    if (String(error).includes("選択を取り消しました")) {
+      return;
+    }
+    setStatus(`保存先を選べませんでした: ${error}`, "error");
+  }
+}
+
 async function refreshGitStatus() {
   try {
     const result = await invoke("git_status");
@@ -351,6 +366,7 @@ async function saveAndPush() {
 }
 
 function bindEvents() {
+  elements.workspaceBrowseButton.addEventListener("click", browseWorkspacePath);
   elements.workspaceSaveButton.addEventListener("click", saveWorkspaceSettings);
   elements.autoCommitToggle.addEventListener("change", () => {
     if (!elements.autoCommitToggle.checked) {

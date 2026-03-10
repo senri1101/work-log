@@ -112,6 +112,28 @@ fn save_app_settings(
 }
 
 #[tauri::command]
+fn pick_workspace_path() -> Result<String, String> {
+    let output = Command::new("osascript")
+        .args([
+            "-e",
+            "POSIX path of (choose folder with prompt \"ログ用の保存先を選んでください\")",
+        ])
+        .output()
+        .map_err(|err| format!("フォルダ選択の起動に失敗しました: {err}"))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if stderr.contains("-128") {
+            Err("選択を取り消しました。".to_string())
+        } else {
+            Err(format!("フォルダを選べませんでした: {}", stderr.trim()))
+        }
+    }
+}
+
+#[tauri::command]
 fn load_entry(app: AppHandle, date: String) -> Result<LoadEntryResponse, String> {
     let workspace = workspace_root(&app)?;
     let state_path = entry_state_path(&workspace, &date);
@@ -518,6 +540,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_workspace_settings,
             save_app_settings,
+            pick_workspace_path,
             load_entry,
             render_markdown,
             save_entry,
