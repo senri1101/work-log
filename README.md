@@ -134,6 +134,10 @@ gh repo create YOUR_NAME/work-log-data --private --clone --add-readme
 LP は `docs/` 配下の静的ファイルとして管理しています。  
 `main` に push されると `.github/workflows/deploy-pages.yml` で GitHub Pages に反映されます。
 
+## Third-Party Licenses
+
+利用ライブラリのライセンス情報は [THIRD_PARTY_LICENSES.md](/Users/senri.gotoda/Desktop/Repositories/work-log/THIRD_PARTY_LICENSES.md) を参照してください。
+
 ## メモ
 
 - Tauri アプリは `daily/*.md` をフルログとして保存します。UI 上の見た目が整っていても、実体は Markdown です。
