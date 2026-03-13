@@ -20,8 +20,9 @@
           <span class="sidebar-toggle-icon" aria-hidden="true">◂</span>
         </button>
         <p class="eyebrow">Work Log</p>
-        <h1>作業ログ</h1>
-        <p class="lead">その日に残したいことを、見返しやすい形に整えます。</p>
+        <h1>Markdown Daily</h1>
+        <p class="lead">1枚の Markdown をそのまま書いて、同じ場所で見やすく整えます。</p>
+
         <div class="meta-card">
           <p class="meta-label">保存先</p>
           <label class="field-label" for="workspacePathInput">ログ用 repo のパス</label>
@@ -32,9 +33,7 @@
               type="text"
               placeholder="~/Repositories/work-log-data"
             />
-            <button id="workspaceBrowseButton" class="ghost" type="button">
-              選ぶ
-            </button>
+            <button id="workspaceBrowseButton" class="ghost" type="button">選ぶ</button>
           </div>
           <button id="workspaceSaveButton" class="ghost workspace-save-button" type="button">
             保存先を更新
@@ -48,15 +47,28 @@
             <span>保存時に push</span>
           </label>
           <p id="workspacePath" class="meta-value"></p>
-          <p class="meta-note">日報は <code>daily/YYYY/YYYY-MM-DD.md</code> に保存されます。</p>
         </div>
+
         <div class="meta-card">
-          <p class="meta-label">流れ</p>
-          <ol class="steps">
-            <li>today を書く</li>
-            <li>終わったら印をつける</li>
-            <li>保存すると done になる</li>
-          </ol>
+          <p class="meta-label">書き方</p>
+          <ul class="shortcut-list">
+            <li><code># </code> / <code>## </code> / <code>### </code> で見出し</li>
+            <li><code>- [ ] </code> / <code>- [x] </code> / <code>- [/] </code> でタスク</li>
+            <li><code>- </code> で箇条書き</li>
+            <li>チェックはクリックで切り替え</li>
+          </ul>
+        </div>
+
+        <div class="meta-card">
+          <p class="meta-label">ショートカット</p>
+          <ul class="shortcut-list">
+            <li><code>Enter</code>: 次の行を追加</li>
+            <li><code>Tab</code>: インデント</li>
+            <li><code>Shift + Tab</code>: アウトデント</li>
+            <li><code>Cmd/Ctrl + -</code>: 縮小</li>
+            <li><code>Cmd/Ctrl + =</code>: 拡大</li>
+            <li><code>Cmd/Ctrl + 0</code>: 等倍</li>
+          </ul>
         </div>
       </aside>
 
@@ -87,67 +99,20 @@
 
         <div id="status" class="status" aria-live="polite"></div>
 
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <p class="panel-title">today</p>
-              <p class="panel-copy">終わったものはその日に残り、翌日は未完了だけ引き継ぎます。</p>
-            </div>
-            <button
-              id="addTodayItemButton"
-              class="icon-button ghost"
-              type="button"
-              aria-label="項目を追加"
-              title="項目を追加"
-            >
-              <span aria-hidden="true">＋</span>
-            </button>
-          </div>
-          <div id="todayItems" class="today-list"></div>
-        </section>
-
-        <section class="panel details-panel">
+        <section class="panel editor-panel">
           <div class="panel-head compact">
             <div>
-              <p class="panel-title">details</p>
-              <p class="panel-copy">必要なものだけ書きます。</p>
+              <p class="panel-title">Daily Markdown</p>
+              <p class="panel-copy">Markdown の行をその場で見やすく整形します。</p>
+            </div>
+            <div class="panel-tools">
+              <span class="zoom-hint">倍率: <span id="zoomLabel">100%</span></span>
+              <button id="addLineButton" class="ghost mini-button" type="button">
+                ＋ 行を追加
+              </button>
             </div>
           </div>
-          <section class="details-grid">
-            <div class="field-block">
-              <label class="field-title" for="supportInput">support</label>
-              <p class="field-copy">手伝ったこと。</p>
-              <textarea id="supportInput" rows="6"></textarea>
-            </div>
-
-            <div class="field-block">
-              <label class="field-title" for="improvementsInput">improvements</label>
-              <p class="field-copy">次に試すこと。</p>
-              <textarea id="improvementsInput" rows="6"></textarea>
-            </div>
-
-            <div class="field-block">
-              <label class="field-title" for="learningInput">learning</label>
-              <p class="field-copy">気づきがあれば。</p>
-              <textarea id="learningInput" rows="5"></textarea>
-            </div>
-
-            <div class="field-block">
-              <label class="field-title" for="notesInput">notes</label>
-              <p class="field-copy">短いメモ。</p>
-              <textarea id="notesInput" rows="5"></textarea>
-            </div>
-          </section>
-        </section>
-
-        <section class="panel preview-panel">
-          <div class="panel-head compact">
-            <div>
-              <p class="panel-title">Markdown</p>
-              <p class="panel-copy">保存される形です。</p>
-            </div>
-          </div>
-          <pre id="preview" class="preview"></pre>
+          <div id="editor" class="editor"></div>
         </section>
 
         <section class="panel git-panel">
@@ -163,7 +128,7 @@
               <input
                 id="commitMessage"
                 type="text"
-                placeholder="chore: daily log 2026-03-10"
+                placeholder="chore: daily log 2026-03-12"
               />
             </div>
             <div>

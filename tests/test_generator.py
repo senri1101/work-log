@@ -14,17 +14,23 @@ if str(SRC) not in sys.path:
 
 from work_log import cli
 from work_log.generator import build_review_prompts
-from work_log.models import DailyLog, DoneItem
+from work_log.models import DailyLog, TaskNode, TaskStatus
 
 
 class GeneratorTest(unittest.TestCase):
-    def test_review_prompt_prioritizes_impact(self) -> None:
+    def test_review_prompt_prioritizes_completed_tasks(self) -> None:
         logs = [
             DailyLog(
                 entry_date=date(2026, 3, 9),
-                done=[DoneItem(task="Settings screen fix", impact="UX improvement")],
-                support=["Helped QA verify edge cases"],
-                improvements=["Investigated retry design"],
+                queued_tasks=[
+                    TaskNode(
+                        text="Settings screen fix",
+                        status=TaskStatus.DONE,
+                        notes=["impact: UX improvement"],
+                    ),
+                    TaskNode(text="Retry design", status=TaskStatus.DOING),
+                ],
+                memo_lines=["support: Helped QA verify edge cases"],
             )
         ]
         system_prompt, user_prompt = build_review_prompts(
@@ -34,9 +40,10 @@ class GeneratorTest(unittest.TestCase):
             date(2026, 6, 30),
         )
 
-        self.assertIn("impact の反復テーマを最優先", system_prompt)
-        self.assertIn("impact: UX improvement", user_prompt)
-        self.assertIn("support:", user_prompt)
+        self.assertIn("完了済みタスクの反復テーマを最優先", system_prompt)
+        self.assertIn("[queued] Settings screen fix", user_prompt)
+        self.assertIn("doing:", user_prompt)
+        self.assertIn("memo:", user_prompt)
 
     def test_generate_review_writes_markdown_file(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -46,9 +53,18 @@ class GeneratorTest(unittest.TestCase):
             (daily_dir / "2026-03-09.md").write_text(
                 """# 2026-03-09
 
-## done
-- task: Settings screen fix
-  impact: UX improvement
+## ✅ 今日やること
+
+### 🚨 今日必達
+
+### 🐻 必達以外
+- [x] Settings screen fix
+  - impact: UX improvement
+
+## 📝 メモ / 気づき
+- support: Helped QA verify edge cases
+
+## 🐕 保留
 """,
                 encoding="utf-8",
             )

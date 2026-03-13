@@ -3,29 +3,23 @@ const invoke = window.__TAURI__.core.invoke;
 const state = {
   workspacePath: "",
   entry: null,
+  blocks: [],
   sidebarCollapsed: false,
   autoCommitOnSave: false,
   autoPushOnSave: false,
+  pendingFocus: null,
+  zoomLevel: 1,
 };
 
 const elements = {
   shell: document.querySelector(".shell"),
-  sidebar: document.querySelector("#sidebar"),
   entryDate: document.querySelector("#entryDate"),
   reloadButton: document.querySelector("#reloadButton"),
   saveButton: document.querySelector("#saveButton"),
   pushButton: document.querySelector("#pushButton"),
   gitStatusButton: document.querySelector("#gitStatusButton"),
-  addTodayItemButton: document.querySelector("#addTodayItemButton"),
-  todayItems: document.querySelector("#todayItems"),
-  supportInput: document.querySelector("#supportInput"),
-  improvementsInput: document.querySelector("#improvementsInput"),
-  learningInput: document.querySelector("#learningInput"),
-  notesInput: document.querySelector("#notesInput"),
-  commitMessage: document.querySelector("#commitMessage"),
-  gitStatusOutput: document.querySelector("#gitStatusOutput"),
-  preview: document.querySelector("#preview"),
   status: document.querySelector("#status"),
+  editor: document.querySelector("#editor"),
   workspacePath: document.querySelector("#workspacePath"),
   workspacePathInput: document.querySelector("#workspacePathInput"),
   workspaceBrowseButton: document.querySelector("#workspaceBrowseButton"),
@@ -35,9 +29,19 @@ const elements = {
   sidebarToggleButton: document.querySelector("#sidebarToggleButton"),
   sidebarToggleIcon: document.querySelector(".sidebar-toggle-icon"),
   sidebarReopenButton: document.querySelector("#sidebarReopenButton"),
+  commitMessage: document.querySelector("#commitMessage"),
+  gitStatusOutput: document.querySelector("#gitStatusOutput"),
+  zoomLabel: document.querySelector("#zoomLabel"),
+  addLineButton: document.querySelector("#addLineButton"),
 };
 
 const SIDEBAR_KEY = "work-log:sidebar-collapsed";
+const ZOOM_KEY = "work-log:zoom-level";
+const HEADING_LEVELS = {
+  heading1: 1,
+  heading2: 2,
+  heading3: 3,
+};
 
 function todayIso() {
   const now = new Date();
@@ -45,32 +49,116 @@ function todayIso() {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
-function defaultTodayItem() {
-  return { task: "", checked: false, mustDo: false, impact: "" };
+function createBlock(type = "paragraph", text = "", extras = {}) {
+  return {
+    id: crypto.randomUUID(),
+    type,
+    text,
+    indent: extras.indent || 0,
+    checked: extras.checked || "todo",
+  };
+}
+
+function starterMarkdown(date) {
+  return `# ${date}\n\n## ✅ 今日やること\n\n### 🚨 今日必達\n\n### 🐻 必達以外\n\n## 📝 メモ / 気づき\n\n## 🐕 保留\n`;
 }
 
 function emptyEntry(date) {
   return {
     date,
-    today: [defaultTodayItem()],
-    support: [],
-    improvements: [],
-    learning: [],
-    notes: [],
-    markdownPreview: `# ${date}\n`,
+    markdownSource: starterMarkdown(date),
   };
-}
-
-function linesFromTextarea(value) {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function setStatus(message, kind = "") {
   elements.status.textContent = message;
   elements.status.className = `status${kind ? ` ${kind}` : ""}`;
+}
+
+function defaultCommitMessage(date) {
+  return `chore: daily log ${date}`;
+}
+
+function normalizeMarkdown(text) {
+  const normalized = String(text ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  return normalized.endsWith("\n") ? normalized : `${normalized}\n`;
+}
+
+function parseMarkdownToBlocks(markdown) {
+  const lines = normalizeMarkdown(markdown).split("\n");
+  if (lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+
+  const blocks = [];
+  lines.forEach((line) => {
+    if (!line.trim()) {
+      blocks.push(createBlock("paragraph", ""));
+      return;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    if (heading) {
+      blocks.push(
+        createBlock(`heading${heading[1].length}`, heading[2], {
+          indent: 0,
+        }),
+      );
+      return;
+    }
+
+    const checkbox = line.match(/^(\s*)- \[( |x|X|\/)\]\s?(.*)$/);
+    if (checkbox) {
+      blocks.push(
+        createBlock("checkbox", checkbox[3], {
+          indent: Math.floor(checkbox[1].length / 2),
+          checked:
+            checkbox[2] === "/" ? "doing" : checkbox[2].toLowerCase() === "x" ? "done" : "todo",
+        }),
+      );
+      return;
+    }
+
+    const bullet = line.match(/^(\s*)-\s(.*)$/);
+    if (bullet) {
+      blocks.push(
+        createBlock("bullet", bullet[2], {
+          indent: Math.floor(bullet[1].length / 2),
+        }),
+      );
+      return;
+    }
+
+    blocks.push(createBlock("paragraph", line));
+  });
+
+  return blocks.length ? blocks : [createBlock("paragraph", "")];
+}
+
+function serializeBlocks(blocks) {
+  const lines = blocks.map((block) => {
+    const indent = "  ".repeat(block.indent || 0);
+    if (block.type in HEADING_LEVELS) {
+      return `${"#".repeat(HEADING_LEVELS[block.type])} ${block.text}`.trimEnd();
+    }
+    if (block.type === "checkbox") {
+      const token =
+        block.checked === "done" ? "x" : block.checked === "doing" ? "/" : " ";
+      return `${indent}- [${token}] ${block.text}`.trimEnd();
+    }
+    if (block.type === "bullet") {
+      return `${indent}- ${block.text}`.trimEnd();
+    }
+    return `${indent}${block.text}`.trimEnd();
+  });
+  return `${lines.join("\n")}\n`;
+}
+
+function syncMarkdownFromBlocks() {
+  if (!state.entry) {
+    return;
+  }
+  state.entry.markdownSource = serializeBlocks(state.blocks);
 }
 
 function setWorkspaceUi(
@@ -79,7 +167,7 @@ function setWorkspaceUi(
   autoCommitOnSave = false,
   autoPushOnSave = false,
 ) {
-  state.workspacePath = workspacePath;
+  state.workspacePath = configured ? workspacePath : "";
   state.autoCommitOnSave = autoCommitOnSave;
   state.autoPushOnSave = autoPushOnSave;
   elements.workspacePath.textContent = configured ? workspacePath : "未設定";
@@ -92,21 +180,13 @@ function setWorkspaceUi(
     elements.saveButton,
     elements.pushButton,
     elements.gitStatusButton,
-    elements.addTodayItemButton,
     elements.commitMessage,
-    elements.supportInput,
-    elements.improvementsInput,
-    elements.learningInput,
-    elements.notesInput,
+    elements.addLineButton,
   ].forEach((element) => {
     element.disabled = !configured;
   });
   elements.autoCommitToggle.disabled = !configured;
   elements.autoPushToggle.disabled = !configured;
-}
-
-function defaultCommitMessage(date) {
-  return `chore: daily log ${date}`;
 }
 
 function applySidebarState() {
@@ -133,100 +213,231 @@ function toggleSidebar() {
   setSidebarCollapsed(!state.sidebarCollapsed);
 }
 
-function renderTodayItems() {
-  elements.todayItems.innerHTML = "";
-  state.entry.today.forEach((item, index) => {
+function applyZoom() {
+  document.documentElement.style.zoom = String(state.zoomLevel);
+  elements.zoomLabel.textContent = `${Math.round(state.zoomLevel * 100)}%`;
+}
+
+function setZoom(level) {
+  state.zoomLevel = Math.max(0.7, Math.min(1.6, Number(level.toFixed(2))));
+  localStorage.setItem(ZOOM_KEY, String(state.zoomLevel));
+  applyZoom();
+}
+
+function setPendingFocus(id, caret = null) {
+  state.pendingFocus = { id, caret };
+}
+
+function focusPendingBlock() {
+  if (!state.pendingFocus) {
+    return;
+  }
+  const target = elements.editor.querySelector(`[data-block-id="${state.pendingFocus.id}"]`);
+  if (!target) {
+    return;
+  }
+  target.focus();
+  const caret = state.pendingFocus.caret ?? target.value.length;
+  target.setSelectionRange(caret, caret);
+  state.pendingFocus = null;
+}
+
+function autoResize(textarea) {
+  textarea.style.height = "0px";
+  textarea.style.height = `${Math.max(textarea.scrollHeight, 28)}px`;
+}
+
+function convertPrefix(block, value) {
+  if (/^###\s+/.test(value)) {
+    block.type = "heading3";
+    block.text = value.replace(/^###\s+/, "");
+    block.indent = 0;
+    return true;
+  }
+  if (/^##\s+/.test(value)) {
+    block.type = "heading2";
+    block.text = value.replace(/^##\s+/, "");
+    block.indent = 0;
+    return true;
+  }
+  if (/^#\s+/.test(value)) {
+    block.type = "heading1";
+    block.text = value.replace(/^#\s+/, "");
+    block.indent = 0;
+    return true;
+  }
+  const checkbox = value.match(/^- \[( |x|X|\/)\]\s?(.*)$/);
+  if (checkbox) {
+    block.type = "checkbox";
+    block.checked =
+      checkbox[1] === "/" ? "doing" : checkbox[1].toLowerCase() === "x" ? "done" : "todo";
+    block.text = checkbox[2];
+    return true;
+  }
+  const bullet = value.match(/^- (.*)$/);
+  if (bullet) {
+    block.type = "bullet";
+    block.text = bullet[1];
+    return true;
+  }
+  return false;
+}
+
+function blockPlaceholder(block) {
+  if (block.type === "heading1") {
+    return "ページタイトル";
+  }
+  if (block.type === "heading2") {
+    return "見出し";
+  }
+  if (block.type === "heading3") {
+    return "小見出し";
+  }
+  if (block.type === "checkbox") {
+    return "チェックリスト";
+  }
+  if (block.type === "bullet") {
+    return "箇条書き";
+  }
+  return "空行に Markdown を書く";
+}
+
+function statusLabel(checked) {
+  return checked === "done" ? "☑" : checked === "doing" ? "◪" : "☐";
+}
+
+function nextStatus(status) {
+  return status === "todo" ? "doing" : status === "doing" ? "done" : "todo";
+}
+
+function renderEditor() {
+  if (!state.entry) {
+    elements.editor.innerHTML = "";
+    return;
+  }
+
+  elements.editor.innerHTML = "";
+
+  state.blocks.forEach((block, index) => {
     const row = document.createElement("div");
-    row.className = `today-row${item.checked ? " done" : ""}${item.mustDo ? " must-do" : ""}`;
+    row.className = `block-row type-${block.type}`;
+    row.style.setProperty("--indent-level", block.indent || 0);
 
-    const checkboxWrap = document.createElement("label");
-    checkboxWrap.className = "checkbox-wrap";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = item.checked;
-    checkbox.addEventListener("change", () => {
-      item.checked = checkbox.checked;
-      renderTodayItems();
-      refreshPreview();
-    });
-    checkboxWrap.appendChild(checkbox);
+    const chrome = document.createElement("div");
+    chrome.className = "block-chrome";
 
-    const mustDoButton = document.createElement("button");
-    mustDoButton.type = "button";
-    mustDoButton.className = `must-do-button${item.mustDo ? " active" : ""}`;
-    mustDoButton.textContent = "必達";
-    mustDoButton.setAttribute("aria-pressed", item.mustDo ? "true" : "false");
-    mustDoButton.addEventListener("click", () => {
-      item.mustDo = !item.mustDo;
-      renderTodayItems();
-      refreshPreview();
+    if (block.type === "checkbox") {
+      const checkbox = document.createElement("button");
+      checkbox.type = "button";
+      checkbox.className = `checkbox-toggle status-${block.checked}`;
+      checkbox.textContent = statusLabel(block.checked);
+      checkbox.disabled = !state.workspacePath;
+      checkbox.addEventListener("click", () => {
+        block.checked = nextStatus(block.checked);
+        syncMarkdownFromBlocks();
+        renderEditor();
+      });
+      chrome.appendChild(checkbox);
+    } else if (block.type === "bullet") {
+      const bullet = document.createElement("span");
+      bullet.className = "bullet-mark";
+      bullet.textContent = "•";
+      chrome.appendChild(bullet);
+    } else {
+      const spacer = document.createElement("span");
+      spacer.className = "chrome-spacer";
+      chrome.appendChild(spacer);
+    }
+
+    const input = document.createElement("textarea");
+    input.className = `block-input type-${block.type}`;
+    input.rows = 1;
+    input.value = block.text;
+    input.placeholder = blockPlaceholder(block);
+    input.disabled = !state.workspacePath;
+    input.dataset.blockId = block.id;
+    input.addEventListener("input", (event) => {
+      const value = event.target.value;
+      if (!convertPrefix(block, value)) {
+        block.text = value;
+      }
+      syncMarkdownFromBlocks();
+      renderEditor();
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        const nextBlock = createBlock(
+          block.type === "heading1" || block.type === "heading2" || block.type === "heading3"
+            ? "paragraph"
+            : block.type,
+          "",
+          {
+            indent: block.indent || 0,
+            checked: "todo",
+          },
+        );
+        state.blocks.splice(index + 1, 0, nextBlock);
+        syncMarkdownFromBlocks();
+        setPendingFocus(nextBlock.id);
+        renderEditor();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        event.preventDefault();
+        if (block.type === "heading1" || block.type === "heading2" || block.type === "heading3") {
+          return;
+        }
+        block.indent = Math.max(0, (block.indent || 0) + (event.shiftKey ? -1 : 1));
+        syncMarkdownFromBlocks();
+        setPendingFocus(block.id);
+        renderEditor();
+        return;
+      }
+
+      if (event.key === "Backspace" && block.text === "" && state.blocks.length > 1) {
+        event.preventDefault();
+        state.blocks.splice(index, 1);
+        syncMarkdownFromBlocks();
+        setPendingFocus(state.blocks[Math.max(0, index - 1)].id);
+        renderEditor();
+      }
     });
 
-    const taskInput = document.createElement("textarea");
-    taskInput.className = "today-input";
-    taskInput.rows = 2;
-    taskInput.placeholder = "やること";
-    taskInput.value = item.task;
-    taskInput.addEventListener("input", () => {
-      item.task = taskInput.value;
-      refreshPreview();
-    });
+    requestAnimationFrame(() => autoResize(input));
 
-    const impactInput = document.createElement("textarea");
-    impactInput.className = "impact-input";
-    impactInput.rows = 2;
-    impactInput.placeholder = "影響や価値";
-    impactInput.value = item.impact;
-    impactInput.addEventListener("input", () => {
-      item.impact = impactInput.value;
-      refreshPreview();
-    });
+    const actions = document.createElement("div");
+    actions.className = "block-actions";
 
     const removeButton = document.createElement("button");
     removeButton.type = "button";
-    removeButton.className = "remove-button icon-button";
+    removeButton.className = "mini-icon danger";
     removeButton.textContent = "−";
-    removeButton.setAttribute("aria-label", "項目を削除");
-    removeButton.title = "項目を削除";
-    removeButton.disabled = state.entry.today.length === 1;
+    removeButton.title = "ブロックを削除";
+    removeButton.disabled = !state.workspacePath;
     removeButton.addEventListener("click", () => {
-      state.entry.today.splice(index, 1);
-      if (state.entry.today.length === 0) {
-        state.entry.today.push(defaultTodayItem());
+      if (state.blocks.length === 1) {
+        block.text = "";
+        block.type = "paragraph";
+        block.indent = 0;
+        syncMarkdownFromBlocks();
+        setPendingFocus(block.id);
+        renderEditor();
+        return;
       }
-      renderTodayItems();
-      refreshPreview();
+      state.blocks.splice(index, 1);
+      syncMarkdownFromBlocks();
+      setPendingFocus(state.blocks[Math.max(0, index - 1)].id);
+      renderEditor();
     });
+    actions.appendChild(removeButton);
 
-    row.append(checkboxWrap, mustDoButton, taskInput, impactInput, removeButton);
-    elements.todayItems.appendChild(row);
+    row.append(chrome, input, actions);
+    elements.editor.appendChild(row);
   });
-}
 
-function syncEntryFromInputs() {
-  state.entry.support = linesFromTextarea(elements.supportInput.value);
-  state.entry.improvements = linesFromTextarea(elements.improvementsInput.value);
-  state.entry.learning = linesFromTextarea(elements.learningInput.value);
-  state.entry.notes = linesFromTextarea(elements.notesInput.value);
-}
-
-function syncInputsFromEntry() {
-  elements.supportInput.value = state.entry.support.join("\n");
-  elements.improvementsInput.value = state.entry.improvements.join("\n");
-  elements.learningInput.value = state.entry.learning.join("\n");
-  elements.notesInput.value = state.entry.notes.join("\n");
-  renderTodayItems();
-}
-
-async function refreshPreview() {
-  syncEntryFromInputs();
-  try {
-    const markdown = await invoke("render_markdown", { entry: state.entry });
-    state.entry.markdownPreview = markdown;
-    elements.preview.textContent = markdown;
-  } catch (error) {
-    setStatus(`プレビューを表示できませんでした: ${error}`, "error");
-  }
+  requestAnimationFrame(focusPendingBlock);
 }
 
 async function loadEntry(date) {
@@ -235,30 +446,34 @@ async function loadEntry(date) {
     const payload = await invoke("load_entry", { date });
     setWorkspaceUi(true, payload.workspacePath, state.autoCommitOnSave, state.autoPushOnSave);
     state.entry = payload.entry || emptyEntry(date);
+    state.entry.markdownSource = normalizeMarkdown(state.entry.markdownSource);
+    state.blocks = parseMarkdownToBlocks(state.entry.markdownSource);
     elements.entryDate.value = state.entry.date;
     elements.commitMessage.value = defaultCommitMessage(state.entry.date);
-    syncInputsFromEntry();
-    elements.preview.textContent = state.entry.markdownPreview || "";
-    await refreshPreview();
+    renderEditor();
     await refreshGitStatus();
     setStatus("読み込みました。", "success");
   } catch (error) {
     state.entry = emptyEntry(date);
+    state.blocks = parseMarkdownToBlocks(state.entry.markdownSource);
     elements.commitMessage.value = defaultCommitMessage(date);
-    syncInputsFromEntry();
-    elements.preview.textContent = state.entry.markdownPreview;
+    renderEditor();
     setStatus(`読み込めませんでした: ${error}`, "error");
   }
 }
 
 async function saveEntry() {
-  syncEntryFromInputs();
+  if (!state.entry) {
+    return false;
+  }
+  syncMarkdownFromBlocks();
   setStatus("保存しています...");
   try {
     const result = await invoke("save_entry", { entry: state.entry });
     setWorkspaceUi(true, result.workspacePath, state.autoCommitOnSave, state.autoPushOnSave);
-    state.entry.markdownPreview = result.markdown;
-    elements.preview.textContent = result.markdown;
+    state.entry.markdownSource = normalizeMarkdown(result.markdown);
+    state.blocks = parseMarkdownToBlocks(state.entry.markdownSource);
+    renderEditor();
     if (state.autoCommitOnSave) {
       const syncResult = await invoke("git_commit_changes", {
         commitMessage:
@@ -390,29 +605,43 @@ function bindEvents() {
   elements.saveButton.addEventListener("click", saveEntry);
   elements.pushButton.addEventListener("click", saveAndPush);
   elements.gitStatusButton.addEventListener("click", refreshGitStatus);
-  elements.addTodayItemButton.addEventListener("click", () => {
-    state.entry.today.push(defaultTodayItem());
-    renderTodayItems();
+  elements.addLineButton.addEventListener("click", () => {
+    const block = createBlock("paragraph", "");
+    state.blocks.push(block);
+    syncMarkdownFromBlocks();
+    setPendingFocus(block.id);
+    renderEditor();
   });
-  [
-    elements.supportInput,
-    elements.improvementsInput,
-    elements.learningInput,
-    elements.notesInput,
-  ].forEach((element) => {
-    element.addEventListener("input", refreshPreview);
-  });
+
   window.addEventListener("keydown", (event) => {
-    if (event.metaKey && event.key === "\\") {
+    const usesMeta = event.metaKey || event.ctrlKey;
+    if (usesMeta && event.key === "\\") {
       event.preventDefault();
       toggleSidebar();
+      return;
+    }
+    if (usesMeta && event.key === "-") {
+      event.preventDefault();
+      setZoom(state.zoomLevel - 0.1);
+      return;
+    }
+    if (usesMeta && (event.key === "=" || event.key === "+")) {
+      event.preventDefault();
+      setZoom(state.zoomLevel + 0.1);
+      return;
+    }
+    if (usesMeta && event.key === "0") {
+      event.preventDefault();
+      setZoom(1);
     }
   });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
   state.sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
+  state.zoomLevel = Number(localStorage.getItem(ZOOM_KEY) || "1");
   applySidebarState();
+  applyZoom();
   bindEvents();
   const date = todayIso();
   elements.entryDate.value = date;
@@ -421,8 +650,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadEntry(date);
   } else {
     state.entry = emptyEntry(date);
-    syncInputsFromEntry();
-    elements.preview.textContent = state.entry.markdownPreview;
+    state.blocks = parseMarkdownToBlocks(state.entry.markdownSource);
+    elements.commitMessage.value = defaultCommitMessage(date);
+    renderEditor();
     setStatus("保存先を設定してください。", "error");
   }
 });

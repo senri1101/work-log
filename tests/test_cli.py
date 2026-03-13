@@ -17,7 +17,7 @@ from work_log.models import NotionPage
 
 
 class CLITest(unittest.TestCase):
-    def test_sync_daily_writes_canonical_markdown_without_today(self) -> None:
+    def test_sync_daily_writes_full_log_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             page = NotionPage(
@@ -51,9 +51,12 @@ class CLITest(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             output = (root / "daily/2026/2026-03-09.md").read_text(encoding="utf-8")
-            self.assertNotIn("## today", output)
-            self.assertIn("impact: UX improvement", output)
-            self.assertIn("## support", output)
+            self.assertIn("## ✅ 今日やること", output)
+            self.assertIn("- [ ] Review PR", output)
+            self.assertIn("- [x] Settings screen fix", output)
+            self.assertIn("- impact: UX improvement", output)
+            self.assertIn("## 📝 メモ / 気づき", output)
+            self.assertIn("- support: Helped Wang with verification", output)
 
     def test_sync_range_dry_run_does_not_write_files(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

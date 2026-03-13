@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>work-log | 日報をキャリア資産に変える</title>
+    <title>WORK LOG | Markdown 日報をそのまま積み上げる</title>
     <meta
       name="description"
-      content="work-log は、日報を Markdown と GitHub に蓄積し、あとで実績・自己評価・振り返りに変換できる macOS アプリです。"
+      content="WORK LOG は、BlockNote ベースの編集体験で日報をそのまま Markdown と GitHub に積み上げる macOS アプリです。"
     />
     <link rel="canonical" href="https://senri1101.github.io/work-log/" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="work-log" />
-    <meta property="og:title" content="work-log | 日報をキャリア資産に変える" />
+    <meta property="og:site_name" content="WORK LOG" />
+    <meta property="og:title" content="WORK LOG | Markdown 日報をそのまま積み上げる" />
     <meta
       property="og:description"
-      content="日報を Markdown と GitHub に蓄積し、あとで実績・自己評価・振り返りに変換できる macOS アプリ。"
+      content="BlockNote ベースの編集体験で、日報を Markdown と GitHub に積み上げる macOS アプリ。"
     />
     <meta property="og:url" content="https://senri1101.github.io/work-log/" />
     <meta
@@ -25,10 +25,10 @@
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="work-log | 日報をキャリア資産に変える" />
+    <meta name="twitter:title" content="WORK LOG | Markdown 日報をそのまま積み上げる" />
     <meta
       name="twitter:description"
-      content="日報を Markdown と GitHub に蓄積し、あとで実績・自己評価・振り返りに変換できる macOS アプリ。"
+      content="BlockNote ベースの編集体験で、日報を Markdown と GitHub に積み上げる macOS アプリ。"
     />
     <meta
       name="twitter:image"
@@ -42,7 +42,7 @@
         <nav class="nav">
           <div class="brand">
             <span class="brand-mark">WL</span>
-            <span class="brand-name">work-log</span>
+            <span class="brand-name">WORK LOG</span>
           </div>
           <div class="nav-links">
             <a href="#download">入手方法</a>
@@ -54,11 +54,11 @@
 
         <section class="hero-grid">
           <div class="hero-copy">
-            <p class="eyebrow">macOS Daily Log App</p>
-            <h1>日報を、あとから効く<br />キャリア資産にする。</h1>
+            <p class="eyebrow">macOS Markdown Daily Log App</p>
+            <h1>日報を、そのまま<br />Markdown に残す。</h1>
             <p class="lead">
-              work-log は、毎日の作業メモをその場限りで終わらせず、
-              Markdown と GitHub に蓄積して、実績整理や自己評価に使える形へ変換するための Tauri アプリです。
+              WORK LOG は、Notion に近いブロック編集体験で毎日のログを書き、
+              その内容を `daily/YYYY/YYYY-MM-DD.md` にそのまま保存する Tauri アプリです。
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#download">入手方法を見る</a>
@@ -66,11 +66,11 @@
             </div>
             <div class="download-note">
               <p>いまは macOS 向け `.app` の利用を前提にしています。</p>
-              <p>GitHub Releases での配布は次の段階です。</p>
+              <p>日報の実体は Markdown なので、Git でそのまま管理できます。</p>
             </div>
             <ul class="hero-points">
-              <li>today はチェックボックスで管理</li>
-              <li>完了した項目だけを done として保存</li>
+              <li>見た目はブロックエディタ、保存形式は Markdown</li>
+              <li>未着手 / 着手中 / 完了 をそのまま保存</li>
               <li>UI から commit / push まで完結</li>
             </ul>
           </div>
@@ -83,35 +83,35 @@
               <div class="window-content">
                 <div class="window-head">
                   <p>2026-03-10</p>
-                  <span>保存済み</span>
+                  <span>daily/2026/2026-03-10.md</span>
                 </div>
                 <div class="todo-row checked">
                   <div class="checkbox"></div>
                   <div>
                     <p>設定画面修正</p>
-                    <small>impact: UX改善</small>
+                    <small>今日必達</small>
                   </div>
                 </div>
-                <div class="todo-row checked">
-                  <div class="checkbox"></div>
+                <div class="todo-row progress">
+                  <div class="checkbox partial"></div>
                   <div>
                     <p>backlog自動タスク検証</p>
-                    <small>impact: 制作チームの作業削減</small>
+                    <small>着手中</small>
                   </div>
                 </div>
                 <div class="todo-row">
                   <div class="checkbox hollow"></div>
                   <div>
                     <p>API確認</p>
-                    <small>未完了のため Markdown には出さない</small>
+                    <small>保留</small>
                   </div>
                 </div>
                 <div class="markdown-block">
                   <p># 2026-03-10</p>
-                  <p>## done</p>
-                  <p>- task: 設定画面修正</p>
-                  <p>&nbsp;&nbsp;impact: UX改善</p>
-                  <p>- task: backlog自動タスク検証</p>
+                  <p>## ✅ 今日やること</p>
+                  <p>### 🚨 今日必達</p>
+                  <p>- [x] 設定画面修正</p>
+                  <p>- [/] backlog自動タスク検証</p>
                 </div>
               </div>
             </div>
@@ -154,23 +154,21 @@ pnpm tauri build --bundles app</code></pre>
         <section id="features" class="section feature-section">
           <div class="section-heading">
             <p class="eyebrow">Features</p>
-            <h2>日報を書くだけで、あとから使える形に整う。</h2>
+            <h2>日報を書くだけで、Markdown がそのまま積み上がる。</h2>
           </div>
           <div class="feature-grid">
             <article class="feature-card">
               <p class="feature-number">01</p>
-              <h3>チェックボックス起点</h3>
+              <h3>ブロック編集で書ける</h3>
               <p>
-                today を並べて、終わった項目だけにチェックを入れます。完了済みだけが done に変換されるので、
-                TODO とログが自然に分離されます。
+                BlockNote ベースの UI で、記法を前面に出さずに見出しやチェックリストを編集できます。
               </p>
             </article>
             <article class="feature-card">
               <p class="feature-number">02</p>
-              <h3>impact を残せる</h3>
+              <h3>フルログで残る</h3>
               <p>
-                各タスクに impact を添えられるため、半年後に「何をしたか」ではなく
-                「どんな価値を出したか」で振り返れます。
+                完了だけでなく、未着手や着手中、メモ、保留も含めてその日の状態全体を Markdown に保存します。
               </p>
             </article>
             <article class="feature-card">
@@ -187,23 +185,23 @@ pnpm tauri build --bundles app</code></pre>
         <section id="flow" class="section flow-section">
           <div class="section-heading">
             <p class="eyebrow">Flow</p>
-            <h2>日報から実績までの流れ</h2>
+            <h2>毎日のログを残す流れ</h2>
           </div>
           <div class="flow-grid">
             <div class="flow-step">
               <span>1</span>
-              <h3>today を書く</h3>
-              <p>その日やることをアプリに追加する。</p>
+              <h3>ブロックで書く</h3>
+              <p>その日の見出し、チェックリスト、メモを 1 画面で編集する。</p>
             </div>
             <div class="flow-step">
               <span>2</span>
-              <h3>終わったらチェック</h3>
-              <p>完了したらチェックを入れ、必要なら impact を追記する。</p>
+              <h3>状態を更新する</h3>
+              <p>未着手、着手中、完了をその場で更新する。</p>
             </div>
             <div class="flow-step">
               <span>3</span>
-              <h3>Markdown 化</h3>
-              <p>保存時にチェック済みだけが done に正規化される。</p>
+              <h3>Markdown に保存する</h3>
+              <p>保存時にその日の内容全体が `daily/*.md` に反映される。</p>
             </div>
             <div class="flow-step">
               <span>4</span>
@@ -224,7 +222,7 @@ pnpm tauri build --bundles app</code></pre>
               <code>.work-log-state/entries/YYYY/YYYY-MM-DD.json</code>
             </div>
             <div class="structure-card">
-              <p class="structure-label">正式な日報</p>
+              <p class="structure-label">正式な日報 / バックアップ</p>
               <code>daily/YYYY/YYYY-MM-DD.md</code>
             </div>
             <div class="structure-card wide">
@@ -232,15 +230,16 @@ pnpm tauri build --bundles app</code></pre>
               <pre>
 # 2026-03-10
 
-## done
-- task: 設定画面修正
-  impact: UX改善
+## ✅ 今日やること
+### 🚨 今日必達
+- [x] 設定画面修正
+- [/] backlog自動タスク検証
 
-## support
-- 王さんの確認対応
+## 📝 メモ / 気づき
+- support: 依頼内容の確認
 
-## improvements
-- retryボタン検討
+## 🐕 保留
+- [ ] retryボタン検討
               </pre>
             </div>
           </div>

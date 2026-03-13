@@ -1,32 +1,57 @@
 from __future__ import annotations
 
-from work_log.models import DailyLog
+from work_log.models import DailyLog, TaskNode, TaskStatus
 
 
 def render_daily_log(log: DailyLog) -> str:
-    sections: list[str] = []
+    lines = [
+        f"# {log.entry_date.isoformat()}",
+        "",
+        "## ✅ 今日やること",
+        "",
+        "### 🚨 今日必達",
+    ]
+    lines.extend(render_task_group(log.must_do_tasks))
+    lines.extend(
+        [
+            "",
+            "### 🐻 必達以外",
+        ]
+    )
+    lines.extend(render_task_group(log.queued_tasks))
+    lines.extend(
+        [
+            "",
+            "## 📝 メモ / 気づき",
+        ]
+    )
+    if log.memo_lines:
+        lines.extend(f"- {item}" for item in log.memo_lines)
+    lines.extend(
+        [
+            "",
+            "## 🐕 保留",
+        ]
+    )
+    lines.extend(render_task_group(log.pending_tasks))
+    return "\n".join(lines).rstrip() + "\n"
 
-    if log.done:
-        lines = ["## done"]
-        for item in log.done:
-            lines.append(f"- task: {item.task}")
-            if item.impact:
-                lines.append(f"  impact: {item.impact}")
-        sections.append("\n".join(lines))
 
-    for section_name, items in (
-        ("support", log.support),
-        ("improvements", log.improvements),
-        ("learning", log.learning),
-        ("notes", log.notes),
-    ):
-        if not items:
-            continue
-        lines = [f"## {section_name}"]
-        lines.extend(f"- {item}" for item in items)
-        sections.append("\n".join(lines))
+def render_task_group(tasks: list[TaskNode], depth: int = 0) -> list[str]:
+    lines: list[str] = []
+    for task in tasks:
+        token = status_token(task.status)
+        prefix = "  " * depth
+        lines.append(f"{prefix}- [{token}] {task.text.strip()}")
+        for note in task.notes:
+            lines.append(f"{prefix}  - {note}")
+        lines.extend(render_task_group(task.children, depth + 1))
+    return lines
 
-    body = "\n\n".join(sections)
-    if body:
-        return f"# {log.entry_date.isoformat()}\n\n{body}\n"
-    return f"# {log.entry_date.isoformat()}\n"
+
+def status_token(status: TaskStatus) -> str:
+    return {
+        TaskStatus.TODO: " ",
+        TaskStatus.DOING: "/",
+        TaskStatus.DONE: "x",
+    }[status]

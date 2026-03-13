@@ -10,17 +10,21 @@
 
 ```text
 work-log/
-├── desktop/              # Tauri のフロントエンド
+├── web/                  # Vite + React + BlockNote フロントエンド
 ├── src-tauri/            # Tauri の Rust バックエンド
-├── templates/
-└── src/work_log/         # Gemini 生成用の Python CLI
+├── docs/                 # LP / GitHub Pages
+├── templates/            # 生成テンプレート
+└── src/work_log/         # 任意: Gemini 生成用の Python CLI
 ```
 
 ## できること
 
-- `today` をチェック付きで管理
-- 完了したものだけを `done` として Markdown 化
+- 1 枚の Markdown 日報をそのまま編集
+- `#`, `##`, `###`, `- [ ]`, `- [x]`, `- [/]`, `- ` を書くと、その場で見やすく整形表示
+- チェックボックスはクリックでも切り替え可能
+- その日に書いた内容全体を `daily/*.md` に保存
 - 未完了タスクを翌日に持ち越し
+- `Cmd/Ctrl + -`, `Cmd/Ctrl + =`, `Cmd/Ctrl + 0` で UI 全体を拡大縮小
 - 任意のログ用 repo に保存
 - UI から commit / push
 - Gemini で実績ログや自己評価ドラフトを生成
@@ -28,34 +32,36 @@ work-log/
 保存される Markdown 例:
 
 ```md
-# 2026-03-10
+# 2026-03-12
 
-## done
-- task: 設定画面修正
-  impact: UX改善
-- task: backlog自動タスク検証
-  impact: 制作チームの作業削減
+## ✅ 今日やること
 
-## support
-- 王さんの確認対応
+### 🚨 今日必達
+- [ ] 週次ミーティングの準備
+  - [x] アジェンダ整理
+  - [ ] 共有メモ更新
+  - 関連リンクをまとめておく
 
-## improvements
-- retryボタン検討
+### 🐻 必達以外
+- [/] ダッシュボード改善
 
-## learning
-- timezone handling
+## 📝 メモ / 気づき
+- support: 依頼内容の確認
+- learning: markdown workflow
 
-## notes
-- 日々の言葉の公開制御調査
+## 🐕 保留
+- [ ] 通知文言の見直し
+  - 来週まとめて調整する
 ```
 
 ## データ保存先
 
 - 編集中の状態: `<ログ用repo>/.work-log-state/entries/YYYY/YYYY-MM-DD.json`
-- 正式な日報: `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md`
+- 正式な日報兼バックアップ: `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md`
 
 `.work-log-state` は Git 管理しません。  
-Git に残すのは `daily/` 以下の Markdown が中心です。
+Git に残すのは `daily/` 以下の Markdown が中心です。  
+JSON が無くても `daily/*.md` から復元できます。
 
 ## セットアップ
 
@@ -93,14 +99,13 @@ uv run python -m unittest discover -s tests -v
 
 ## 日報アプリの使い方
 
-1. `today` に今日やることを追加する
-2. 完了したらチェックを入れる
-3. 必要なら `impact` を書く
-4. `support`, `improvements`, `learning`, `notes` を追記する
-5. 初回は左側で `選ぶ` からログ用 repo のパスを設定する
-6. 保存すると `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md` が更新される
-7. `保存して push` を押すと、UI から commit と GitHub push まで実行できる
-8. 左側で `保存時に commit` / `保存時に push` を設定すると自動化できる
+1. 初回は左側で `選ぶ` からログ用 repo のパスを設定する
+2. 1 枚の画面でブロックとして日報を書く
+3. チェックリストはクリックでも状態変更できる
+4. `Enter`, `Tab`, `Shift + Tab` で行とインデントを編集する
+5. 保存すると `<ログ用repo>/daily/YYYY/YYYY-MM-DD.md` が更新される
+6. `公開` を押すと、UI から commit と GitHub push まで実行できる
+7. 左側で `保存時に commit` / `保存時に push` を設定すると自動化できる
 
 ## Gemini 生成コマンド
 
@@ -131,8 +136,10 @@ LP は `docs/` 配下の静的ファイルとして管理しています。
 
 ## メモ
 
-- Tauri アプリは保存時に `today` をそのまま Markdown へ出さず、チェック済み項目だけを `done` に変換します。
-- 新しい日付を開くと、前日の未完了タスクだけを `today` に引き継ぎます。
+- Tauri アプリは `daily/*.md` をフルログとして保存します。UI 上の見た目が整っていても、実体は Markdown です。
+- 新しい日付を開くと、前日の `[ ]` と `[/]` が階層ごと引き継がれます。`[x]` は引き継ぎません。
+- `.work-log-state` が無い場合でも `daily/*.md` から復元できます。
+- 旧 `done/support/improvements/learning/notes` 形式の Markdown や旧 JSON は読み込み互換を残しています。
 - `保存時に push` を ON にすると、保存時に commit も自動で有効になります。
 - Python CLI は既存の日報 Markdown を読み込み、Gemini で成果や自己評価を生成します。
 - `uv.lock` をコミットしているため、Gemini 生成の Python 環境は固定できます。

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from work_log.models import DailyLog
+from work_log.models import DailyLog, TaskStatus
 
 
 def build_achievement_prompts(
@@ -13,7 +13,7 @@ def build_achievement_prompts(
 ) -> tuple[str, str]:
     system_prompt = (
         "あなたはエンジニアの実績ログをMarkdownで作成するアシスタントです。"
-        "impact を最優先で要約し、done、support、improvements、learning、notes を補足に使ってください。"
+        "完了済みタスクを主な根拠にし、着手中タスクとメモを補足として使ってください。"
         "本文は自然な日本語で書き、Markdown だけを返してください。"
     )
     user_prompt = (
@@ -37,7 +37,7 @@ def build_review_prompts(
 ) -> tuple[str, str]:
     system_prompt = (
         "あなたはエンジニアの自己評価ドラフトをMarkdownで作成するアシスタントです。"
-        "impact の反復テーマを最優先でまとめ、その根拠として done、support、improvements、learning、notes を使ってください。"
+        "完了済みタスクの反復テーマを最優先でまとめ、その根拠として着手中タスクとメモを使ってください。"
         "本文は自然な日本語で書き、Markdown だけを返してください。"
     )
     user_prompt = (
@@ -59,24 +59,33 @@ def build_context(logs: list[DailyLog]) -> str:
     chunks: list[str] = []
     for log in sorted(logs, key=lambda item: item.entry_date):
         lines = [f"## {log.entry_date.isoformat()}"]
-        if log.done:
+        completed = build_status_lines(log, TaskStatus.DONE)
+        doing = build_status_lines(log, TaskStatus.DOING)
+        pending = build_status_lines(log, TaskStatus.TODO)
+
+        if completed:
             lines.append("done:")
-            for item in log.done:
-                line = f"- {item.task}"
-                if item.impact:
-                    line += f" | impact: {item.impact}"
-                lines.append(line)
-        if log.support:
-            lines.append("support:")
-            lines.extend(f"- {item}" for item in log.support)
-        if log.improvements:
-            lines.append("improvements:")
-            lines.extend(f"- {item}" for item in log.improvements)
-        if log.learning:
-            lines.append("learning:")
-            lines.extend(f"- {item}" for item in log.learning)
-        if log.notes:
-            lines.append("notes:")
-            lines.extend(f"- {item}" for item in log.notes)
+            lines.extend(completed)
+        if doing:
+            lines.append("doing:")
+            lines.extend(doing)
+        if pending:
+            lines.append("pending:")
+            lines.extend(pending)
+        if log.memo_lines:
+            lines.append("memo:")
+            lines.extend(f"- {item}" for item in log.memo_lines)
         chunks.append("\n".join(lines))
     return "\n\n".join(chunks)
+
+
+def build_status_lines(log: DailyLog, status: TaskStatus) -> list[str]:
+    lines: list[str] = []
+    for bucket, path, node in log.iter_tasks():
+        if node.status != status:
+            continue
+        line = f"- [{bucket}] {path}"
+        if node.notes:
+            line += f" | notes: {' / '.join(node.notes)}"
+        lines.append(line)
+    return lines

@@ -4,7 +4,10 @@
   "version": "0.2.0",
   "identifier": "dev.senri.work-log",
   "build": {
-    "frontendDist": "../desktop"
+    "beforeDevCommand": "npm run dev -- --host 0.0.0.0",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,

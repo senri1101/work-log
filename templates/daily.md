@@ -1,17 +1,17 @@
 # YYYY-MM-DD
 
 ## done
-- task: 設定画面修正
-  impact: UX改善
+- task: 週次ミーティングの準備
+  impact: 共有の抜け漏れを減らした
 
 ## support
-- 王さんの確認対応
+- 依頼内容の確認対応
 
 ## improvements
-- retryボタン検討
+- ダッシュボード導線の見直し
 
 ## learning
-- timezone handling
+- markdown workflow
 
 ## notes
-- 日々の言葉の公開制御調査
+- 来週まとめて調整する項目を整理
