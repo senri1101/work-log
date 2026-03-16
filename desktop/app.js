@@ -9,6 +9,8 @@ const state = {
   autoPushOnSave: false,
   pendingFocus: null,
   zoomLevel: 1,
+  lastKnownToday: "",
+  rolloverInFlight: false,
 };
 
 const elements = {
@@ -493,6 +495,20 @@ async function saveEntry() {
   }
 }
 
+async function persistCurrentEntry() {
+  if (!state.entry || !state.workspacePath) {
+    return false;
+  }
+
+  syncMarkdownFromBlocks();
+  const result = await invoke("save_entry", { entry: state.entry });
+  setWorkspaceUi(true, result.workspacePath, state.autoCommitOnSave, state.autoPushOnSave);
+  state.entry.markdownSource = normalizeMarkdown(result.markdown);
+  state.blocks = parseMarkdownToBlocks(state.entry.markdownSource);
+  renderEditor();
+  return true;
+}
+
 async function loadWorkspaceSettings() {
   try {
     const result = await invoke("get_workspace_settings");
@@ -579,6 +595,39 @@ async function saveAndPush() {
   }
 }
 
+async function syncDateIfNeeded() {
+  const nextToday = todayIso();
+  if (!state.lastKnownToday) {
+    state.lastKnownToday = nextToday;
+    return;
+  }
+  if (state.rolloverInFlight || nextToday === state.lastKnownToday) {
+    return;
+  }
+
+  const displayedDate = elements.entryDate.value || state.entry?.date || "";
+  const shouldFollowToday = displayedDate === state.lastKnownToday;
+  state.lastKnownToday = nextToday;
+
+  if (!shouldFollowToday) {
+    return;
+  }
+
+  state.rolloverInFlight = true;
+  setStatus(`日付が変わったため ${nextToday} に切り替えています...`);
+  try {
+    if (state.workspacePath && state.entry?.date) {
+      await persistCurrentEntry();
+    }
+    await loadEntry(nextToday);
+    setStatus(`${nextToday} に切り替えました。`, "success");
+  } catch (error) {
+    setStatus(`日付の切り替えに失敗しました: ${error}`, "error");
+  } finally {
+    state.rolloverInFlight = false;
+  }
+}
+
 function bindEvents() {
   elements.workspaceBrowseButton.addEventListener("click", browseWorkspacePath);
   elements.workspaceSaveButton.addEventListener("click", saveWorkspaceSettings);
@@ -635,15 +684,25 @@ function bindEvents() {
       setZoom(1);
     }
   });
+
+  window.addEventListener("focus", () => {
+    syncDateIfNeeded();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      syncDateIfNeeded();
+    }
+  });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  state.lastKnownToday = todayIso();
   state.sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
   state.zoomLevel = Number(localStorage.getItem(ZOOM_KEY) || "1");
   applySidebarState();
   applyZoom();
   bindEvents();
-  const date = todayIso();
+  const date = state.lastKnownToday;
   elements.entryDate.value = date;
   const configured = await loadWorkspaceSettings();
   if (configured) {
